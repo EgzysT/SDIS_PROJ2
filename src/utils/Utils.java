@@ -29,4 +29,19 @@ public final class Utils {
         return result;
     }
 
+    public static boolean in_range(Integer value, Integer lower, Integer upper, Boolean closed) {
+
+        if (lower < upper) {
+            if (closed)
+                return value > lower && value <= upper;
+            else
+                return value > lower && value < upper;
+        } else {
+            if (closed)
+                return value > lower || value <= upper;
+            else
+                return value > lower || value < upper;
+        }
+    }
+
 }

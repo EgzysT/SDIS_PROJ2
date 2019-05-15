@@ -5,7 +5,7 @@ import java.io.Serializable;
 public class ChordMessage implements Serializable {
 
     enum MessageType {
-        CLOSEST_PRECEDING_FINGER,
+        CLOSEST_PRECEDING_NODE,
         FIND_SUCCESSOR, FIND_PREDECESSOR,
         GET_SUCCESSOR, GET_PREDECESSOR,
         SET_PREDECESSOR,
