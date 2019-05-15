@@ -1,38 +1,22 @@
 package chord;
 
-/*
-    QUERY_SUCCESSOR <identifier>
-    SUCCESSOR <successor>
-
-    QUERY_PREDECESSOR <identifier>
-    PREDECESSOR <successor>
-
-    UPDATE_PREDECESSOR <predecessor>
-    UPDATED
-
-
-
-
-
-
-    END
-
- */
-
 import java.io.Serializable;
 
 public class ChordMessage implements Serializable {
 
     enum MessageType {
-        QUERY_SUCCESSOR, SUCESSOR,
-        QUERY_PREDECESSOR, PREDECESSOR,
-        END
+        CLOSEST_PRECEDING_FINGER,
+        FIND_SUCCESSOR, FIND_PREDECESSOR,
+        GET_SUCCESSOR, GET_PREDECESSOR,
+        SET_PREDECESSOR,
+        NODE, OK, DEBUG, END
     }
 
-    MessageType type;;
+    MessageType type;
 
-    ChordMessage(MessageType type) {
+    ChordMessage type(MessageType type) {
         this.type = type;
+        return this;
     }
 
     public String toString() {
@@ -40,12 +24,11 @@ public class ChordMessage implements Serializable {
     }
 }
 
-class ChordRequestQUERY extends ChordMessage {
+class ChordMessageKey extends ChordMessage {
 
     Integer key;
 
-    ChordRequestQUERY(MessageType type, Integer key) {
-        super(type);
+    ChordMessageKey(Integer key) {
         this.key = key;
     }
 
@@ -55,12 +38,11 @@ class ChordRequestQUERY extends ChordMessage {
     }
 }
 
-class ChordReplyQUERY extends ChordMessage {
+class ChordMessageNode extends ChordMessage {
 
     NodeInfo info;
 
-    ChordReplyQUERY(MessageType type, NodeInfo info) {
-        super(type);
+    ChordMessageNode(NodeInfo info) {
         this.info = info;
     }
 

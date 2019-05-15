@@ -7,9 +7,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.net.InetSocketAddress;
-import java.rmi.Naming;
-import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 
 class NodeInfo implements Serializable {
     Integer identifier;
@@ -25,7 +22,6 @@ class NodeInfo implements Serializable {
         return identifier + " - " + address;
     }
 }
-
 
 public final class ChordNode {
 
@@ -72,33 +68,56 @@ public final class ChordNode {
         finger_table = new NodeInfo[Chord.m];
 
         try {
-//            ChordConnection connection = new ChordConnection(Chord.supernode);
-//            connection.send(new ChordMessageJOIN(identifier + 1));
-//            ChordMessageJOINED joined = (ChordMessageJOINED) connection.receive();
+            // Open connection with supernode
+            ChordConnection connectionSN = new ChordConnection(Chord.supernode);
 
-//            System.out.println(joined);
-//
-//            finger_table[0] = joined.successor;
-//            predecessor = joined.predecessor;
-//            // TODO update predecessor of successor
-//
-//            for (int i = 0; i < Chord.m - 1; i++) {
-//                int start = identifier + (int) Math.pow(2, i);
-//
-//                if (start >= identifier && start < finger_table[i].identifier) {
-//                    finger_table[i + 1] = finger_table[i];
-//                } else {
-//
-//                }
-//            }
+            // Ask supernode for successor
+            // Start: n + 2^(1 - 1) <=> n + 2^0 <=> n + 1
+            connectionSN.send(new ChordMessageKey(identifier + 1).type(ChordMessage.MessageType.FIND_SUCCESSOR));
+            finger_table[0] = ((ChordMessageNode) connectionSN.receive()).info;
+
+            // Open connection with successor
+            ChordConnection connectionS = new ChordConnection(successor().address);
+
+            // Ask successor for predecessor
+            connectionS.send(new ChordMessage().type(ChordMessage.MessageType.GET_PREDECESSOR));
+            predecessor = ((ChordMessageNode) connectionS.receive()).info;
+
+            // Update successor's predecessor
+            connectionS.send(new ChordMessageNode(info()).type(ChordMessage.MessageType.SET_PREDECESSOR));
+            connectionS.receive();
+
+            // Close connection with successor
+            connectionS.send(new ChordMessage().type(ChordMessage.MessageType.END));
+            connectionS.close();
+
+            for (int i = 0; i < Chord.m - 1; i++) {
+                // Finger: n + 2^(i + 1 - 1) <=> n + 2^(i)
+                int start = identifier + (int) Math.pow(2, i);
+
+                if (start >= identifier && start < finger_table[i].identifier) {
+                    finger_table[i + 1] = finger_table[i];
+                } else {
+                    // Ask supernode for successor
+                    connectionSN.send(new ChordMessageKey(start).type(ChordMessage.MessageType.FIND_SUCCESSOR));
+                    finger_table[i + 1] = ((ChordMessageNode) connectionSN.receive()).info;
+                }
+            }
+
+            System.out.println("\n--- DEBUG ---");
+            System.out.println(this);
+            System.out.println("-------------\n");
+
+            // Debug
+            connectionSN.send(new ChordMessage().type(ChordMessage.MessageType.DEBUG));
+
+            // Close connection with supernode
+            connectionSN.send(new ChordMessage().type(ChordMessage.MessageType.END));
+            connectionSN.close();
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(-1);
         }
-
-
-
-
 
         Logger.info("Chord", "starting node " + identifier + " at " + address);
     }
@@ -107,65 +126,108 @@ public final class ChordNode {
         return finger_table[0];
     }
 
-    public NodeInfo findSuccessor(Integer key) {
+    NodeInfo predecessor() {
+        return predecessor;
+    }
 
-        NodeInfo currNode = new NodeInfo(identifier, address);
-        NodeInfo succNode = successor();
+    void predecessor(NodeInfo info) {
+        predecessor = info;
+    }
 
-        while (!(key > currNode.identifier && key <= succNode.identifier)) {
+    NodeInfo info() {
+        return new NodeInfo(identifier, address);
+    }
 
-            try {
-//                ChordConnection connection = new ChordConnection(currAddr);
+    NodeInfo findSuccessor(Integer key) {
 
-//                connection.send(new ChordMessageJOIN());
+        NodeInfo node = findPredecessor(key);
+        NodeInfo successor = null;
 
-//                connection.close();
+        try {
+            // Open connection
+            ChordConnection connection = new ChordConnection(node.address);
 
-                break;
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.exit(-1);
-            }
+            // Ask node's successor
+            connection.send(new ChordMessage().type(ChordMessage.MessageType.GET_SUCCESSOR));
+            successor = ((ChordMessageNode) connection.receive()).info;
+
+            // Close connection
+            connection.send(new ChordMessage().type(ChordMessage.MessageType.END));
+            connection.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
         }
 
-        return succNode;
+        return successor;
     }
 
     NodeInfo findPredecessor(Integer key) {
 
-        NodeInfo currNode = new NodeInfo(identifier, address);
-        NodeInfo succNode = successor();
+        NodeInfo node = new NodeInfo(identifier, address);
+        NodeInfo successor = successor();
 
-        while (!(key > currNode.identifier && key <= succNode.identifier)) {
+        while (!(key > node.identifier && key <= successor.identifier)) {
 
-            try {
-//                ChordConnection connection = new ChordConnection(currAddr);
-
-//                connection.send(new ChordMessageJOIN());
-
+//            try {
+//                // Open connection
+//                ChordConnection connection = new ChordConnection(node.address);
+//
+//                // Ask closest preceding node and update
+//                connection.send(new ChordMessageKey(key).type(ChordMessage.MessageType.CLOSEST_PRECEDING_FINGER));
+//                node = ((ChordMessageNode) connection.receive()).info;
+//
+//                // Ask closest preceding node's successor
+//                connection.send(new ChordMessage().type(ChordMessage.MessageType.GET_SUCCESSOR));
+//                successor = ((ChordMessageNode) connection.receive()).info;
+//
+//                // Close connection
+//                connection.send(new ChordMessage().type(ChordMessage.MessageType.END));
 //                connection.close();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//                System.exit(-1);
+//            }
 
-                break;
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.exit(-1);
-            }
+            break;
         }
 
-        return currNode;
-
+        return node;
     }
 
-//    NodeInfo closestPrecedingFinger(Integer key) {
-//
-//        for (int i = Chord.m - 1; i >= 0; i--) {
-//            NodeInfo finger = finger_table[i];
-//            if (finger.identifier > identifier && finger.identifier < key)
-//                return finger;
-//        }
-//
-//        return new NodeInfo(identifier, address);
-//    }
+    NodeInfo closestPrecedingFinger(Integer key) {
+
+        for (int i = Chord.m - 1; i >= 0; i--) {
+            NodeInfo finger = finger_table[i];
+            if (finger.identifier > identifier && finger.identifier < key)
+                return finger;
+        }
+
+        return new NodeInfo(identifier, address);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("Node ")
+                .append(identifier)
+                .append(" at ")
+                .append(address)
+                .append("\nPredecessor: ")
+                .append(predecessor)
+                .append('\n');
+
+        for (int i = 0; i < Chord.m; i++) {
+            sb.append("Finger #")
+                    .append(i)
+                    .append(": ")
+                    .append(finger_table[i])
+                    .append('\n');
+        }
+
+        return sb.toString();
+    }
 
     public static void main(String[] args) {
 
