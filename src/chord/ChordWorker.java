@@ -14,9 +14,11 @@ class ChordWorker extends Worker {
     protected void work() {
 
         // TODO run async, possible??
-        // TODO ASKPredecessor
 
         ChordMessage request = connection.listen();
+
+        if (request == null)
+            connection.reply(null);
 
         switch (request.type) {
             case CLOSEST_PRECEDING_NODE:
@@ -38,6 +40,10 @@ class ChordWorker extends Worker {
                 System.out.println("\n--- DEBUG ---");
                 System.out.println(ChordNode.instance());
                 System.out.println("-------------\n");
+                break;
+            case ALIVE:
+            case NODE:
+                // Ignore
                 break;
         }
     }

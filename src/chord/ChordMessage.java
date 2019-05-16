@@ -8,7 +8,7 @@ public class ChordMessage implements Serializable {
         CLOSEST_PRECEDING_NODE,
         FIND_SUCCESSOR, NOTIFY,
         GET_SUCCESSOR, GET_PREDECESSOR,
-        NODE, DEBUG, END
+        ALIVE, NODE, DEBUG
     }
 
     MessageType type;
@@ -37,8 +37,8 @@ public class ChordMessage implements Serializable {
 
         if (key != null)
             sb.append(key);
-        else
-            sb.append(node);
+        if (node != null)
+            sb.append(node.address);
 
         return sb.toString();
     }

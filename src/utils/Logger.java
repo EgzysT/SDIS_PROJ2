@@ -7,14 +7,19 @@ import java.util.logging.LogRecord;
 
 public final class Logger {
 
-    private final static java.util.logging.Logger Logger = java.util.logging.Logger.getLogger("Logger");
+//    private final static java.util.logging.Logger Logger = java.util.logging.Logger.getLogger("Logger");
+
+    private static java.util.logging.Logger logger; // = java.util.logging.Logger.getAnonymousLogger();
 
     static {
-        Logger.setLevel(Level.INFO);
+        final Level loggerLevel = Level.FINE;
 
-        Logger.setUseParentHandlers(false);
+        logger = java.util.logging.Logger.getAnonymousLogger();
+        logger.setLevel(loggerLevel);
+        logger.setUseParentHandlers(false);
+
         ConsoleHandler handler = new ConsoleHandler();
-
+        handler.setLevel(loggerLevel);
         handler.setFormatter(new Formatter() {
             @Override
             public String format(LogRecord record) {
@@ -22,23 +27,23 @@ public final class Logger {
             }
         });
 
-        Logger.addHandler(handler);
+        logger.addHandler(handler);
     }
 
     public static void fine(String prefix, String msg) {
-        Logger.fine(prefix + ": " + msg + ".");
+        logger.fine(prefix + ": " + msg + ".");
     }
 
     public static void info(String prefix, String msg) {
-        Logger.info(prefix + ": " + msg + ".");
+        logger.info(prefix + ": " + msg + ".");
     }
 
     public static void warning(String prefix, String msg) {
-        Logger.warning(prefix  + ": " + msg + ".");
+        logger.warning(prefix  + ": " + msg + ".");
     }
 
     public static void severe(String prefix, String msg) {
-        Logger.severe(prefix + ": " + msg + ".");
+        logger.severe(prefix + ": " + msg + ".");
         System.exit(-1);
     }
 }

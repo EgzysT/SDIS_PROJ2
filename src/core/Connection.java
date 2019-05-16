@@ -1,6 +1,7 @@
 package core;
 
 import chord.ChordMessage;
+import utils.Logger;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -10,7 +11,7 @@ import java.net.Socket;
 
 public abstract class Connection {
 
-    // TODO change to ssl socket later
+    // TODO change to ssl ocket later
     protected Socket client;
 
     protected Connection(Socket node) {
@@ -21,8 +22,7 @@ public abstract class Connection {
         try {
             client = new Socket(addr.getHostName(), addr.getPort());
         } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(-1);
+            // Ignore
         }
     }
 
