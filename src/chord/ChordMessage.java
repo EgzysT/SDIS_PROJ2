@@ -6,7 +6,7 @@ public class ChordMessage implements Serializable {
 
     enum MessageType {
         CLOSEST_PRECEDING_NODE,
-        FIND_SUCCESSOR, FIND_PREDECESSOR,
+        FIND_SUCCESSOR, NOTIFY,
         GET_SUCCESSOR, GET_PREDECESSOR,
         SET_PREDECESSOR,
         NODE, OK, DEBUG, END

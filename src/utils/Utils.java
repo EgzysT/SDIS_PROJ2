@@ -29,6 +29,10 @@ public final class Utils {
         return result;
     }
 
+    public static Integer start(Integer n, Integer i) {
+        return n + (int) Math.pow(2, i - 1);
+    }
+
     public static boolean in_range(Integer value, Integer lower, Integer upper, Boolean closed) {
 
         if (lower < upper) {
@@ -43,5 +47,4 @@ public final class Utils {
                 return value > lower || value < upper;
         }
     }
-
 }
