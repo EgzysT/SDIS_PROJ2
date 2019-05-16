@@ -1,5 +1,6 @@
 package chord;
 
+import core.Connection;
 import core.Dispatcher;
 
 import java.io.IOException;
@@ -19,4 +20,3 @@ public class ChordDispatcher extends Dispatcher {
         executor.submit(new ChordWorker(connection));
     }
 }
-

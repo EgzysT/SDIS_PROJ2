@@ -1,11 +1,3 @@
-import chord.ChordConnection;
-import chord.ChordNode;
-
-
-import utils.TCPSocket;
-
-import java.net.InetSocketAddress;
-
 public class Main {
 
     public static void main(String[] args) throws InterruptedException {
@@ -17,7 +9,7 @@ public class Main {
 //            server1.waitConnection();
 //        }).start();
 //
-//        ChordConnection query = new ChordConnection(n);
+//        Connection query = new Connection(n);
 
 //        ChordNode node1 = new ChordNode(new InetSocketAddress("localhost", 8080));
 

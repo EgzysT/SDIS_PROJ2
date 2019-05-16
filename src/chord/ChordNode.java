@@ -1,5 +1,6 @@
 package chord;
 
+import core.Connection;
 import utils.Logger;
 import utils.Utils;
 
@@ -60,6 +61,7 @@ public final class ChordNode {
 
             Chord.executor.execute(this::stabilize);
             Chord.executor.execute(() -> fixFinger(0));
+
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-1);
@@ -83,23 +85,9 @@ public final class ChordNode {
     void initNode(InetSocketAddress addr) {
         init(addr);
 
+        //TODO check for null (connection ignores it)
         predecessor = null;
-
-        try {
-            // Open connection to supernode
-            ChordConnection connection = new ChordConnection(Chord.supernode);
-
-            // Ask supernode for successor
-            connection.send(new ChordMessageKey(info.identifier).type(ChordMessage.MessageType.FIND_SUCCESSOR));
-            successor(((ChordMessageNode) connection.receive()).info);
-
-            // Close connection to supernode
-            connection.send(new ChordMessage().type(ChordMessage.MessageType.END));
-            connection.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(-1);
-        }
+        successor(new ChordConnection(Chord.supernode).findSuccessor(info.identifier));
 
         initThreads();
 
@@ -127,34 +115,11 @@ public final class ChordNode {
         NodeInfo node = info;
         NodeInfo successor = successor();
 
+        // TODO if node is self, dont waste a socket and just call function
+        // TODO check if successor exists??
         while (!Utils.in_range(key, node.identifier, successor.identifier, true)) {
-
-            try {
-                // Open connection with node
-                ChordConnection connection = new ChordConnection(node.address);
-
-                // Ask closest preceding node
-                connection.send(new ChordMessageKey(key).type(ChordMessage.MessageType.CLOSEST_PRECEDING_NODE));
-                node = ((ChordMessageNode) connection.receive()).info;
-
-                // Close connection
-                connection.send(new ChordMessage().type(ChordMessage.MessageType.END));
-                connection.close();
-
-                // Open connection with new node
-                connection = new ChordConnection(node.address);
-
-                // Ask node's successor
-                connection.send(new ChordMessage().type(ChordMessage.MessageType.GET_SUCCESSOR));
-                successor = ((ChordMessageNode) connection.receive()).info;
-
-                // Close connection
-                connection.send(new ChordMessage().type(ChordMessage.MessageType.END));
-                connection.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.exit(-1);
-            }
+            node = new ChordConnection(node.address).findClosest(key);
+            successor = new ChordConnection(node.address).getSuccessor();
         }
 
         return successor;
@@ -169,6 +134,7 @@ public final class ChordNode {
             if (finger == null)
                 continue;
 
+            // TODO check if alive, remove if not
             if (Utils.in_range(finger.identifier, info.identifier, key, false))
                 return finger;
         }
@@ -178,35 +144,12 @@ public final class ChordNode {
 
     private void stabilize() {
 
-        try {
-            // Open connection with successor
-            ChordConnection connection = new ChordConnection(successor().address);
+        NodeInfo x = new ChordConnection(successor().address).getPredecessor();
 
-            // Ask successor for predecessor
-            connection.send(new ChordMessage().type(ChordMessage.MessageType.GET_PREDECESSOR));
-            NodeInfo x = ((ChordMessageNode) connection.receive()).info;
+        if (Utils.in_range(x.identifier, info.identifier, successor().identifier, false))
+            successor(x);
 
-            // Close connection with successor
-            connection.send(new ChordMessage().type(ChordMessage.MessageType.END));
-            connection.close();
-
-            if (Utils.in_range(x.identifier, info.identifier, successor().identifier, false))
-                successor(x);
-
-            // Open connection with new successor
-            connection = new ChordConnection(successor().address);
-
-            // Notify new successor about this node
-            connection.send(new ChordMessageNode(info).type(ChordMessage.MessageType.NOTIFY));
-            connection.receive();
-
-            // Close connection with new successor
-            connection.send(new ChordMessage().type(ChordMessage.MessageType.END));
-            connection.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(-1);
-        }
+        new ChordConnection(successor().address).notify(info);
 
         Chord.executor.schedule(
                 this::stabilize,
@@ -262,10 +205,7 @@ public final class ChordNode {
         if (args[0].equals("SUPER")) {
             ChordNode.instance().initSuperNode();
         } else if (args[0].equals("DEBUG")) {
-            ChordConnection connection = new ChordConnection(new InetSocketAddress(args[1], Integer.parseInt(args[2])));
-            connection.send(new ChordMessage().type(ChordMessage.MessageType.DEBUG));
-            connection.send(new ChordMessage().type(ChordMessage.MessageType.END));
-            connection.close();
+            new ChordConnection(new InetSocketAddress(args[1], Integer.parseInt(args[2]))).debug();
         } else {
             ChordNode.instance().initNode(new InetSocketAddress(args[0], Integer.parseInt(args[1])));
         }

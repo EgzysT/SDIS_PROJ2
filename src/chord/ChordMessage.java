@@ -8,11 +8,22 @@ public class ChordMessage implements Serializable {
         CLOSEST_PRECEDING_NODE,
         FIND_SUCCESSOR, NOTIFY,
         GET_SUCCESSOR, GET_PREDECESSOR,
-        SET_PREDECESSOR,
-        NODE, OK, DEBUG, END
+        NODE, DEBUG, END
     }
 
     MessageType type;
+    Integer key;
+    NodeInfo node;
+
+    ChordMessage() {}
+
+    ChordMessage(Integer key) {
+        this.key = key;
+    }
+
+    ChordMessage(NodeInfo node) {
+        this.node = node;
+    }
 
     ChordMessage type(MessageType type) {
         this.type = type;
@@ -20,34 +31,15 @@ public class ChordMessage implements Serializable {
     }
 
     public String toString() {
-        return type.toString();
-    }
-}
+        StringBuilder sb = new StringBuilder()
+                .append(type.toString())
+                .append(" ");
 
-class ChordMessageKey extends ChordMessage {
+        if (key != null)
+            sb.append(key);
+        else
+            sb.append(node);
 
-    Integer key;
-
-    ChordMessageKey(Integer key) {
-        this.key = key;
-    }
-
-    @Override
-    public String toString() {
-        return super.toString() + " " + key;
-    }
-}
-
-class ChordMessageNode extends ChordMessage {
-
-    NodeInfo info;
-
-    ChordMessageNode(NodeInfo info) {
-        this.info = info;
-    }
-
-    @Override
-    public String toString() {
-        return super.toString() + " " + info;
+        return sb.toString();
     }
 }
