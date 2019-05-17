@@ -8,7 +8,7 @@ import java.net.Socket;
 
 public abstract class Connection {
 
-    // TODO change to ssl ocket later
+    // TODO change to ssl socket later
     protected Socket client;
 
     protected Connection(Socket node) {

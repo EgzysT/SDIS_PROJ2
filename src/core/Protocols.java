@@ -26,5 +26,7 @@ package core;
  */
 public class Protocols {
 
-	public void 
+	public void backup() {
+		
+	}
 }
