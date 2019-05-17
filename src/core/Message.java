@@ -1,11 +1,10 @@
 package core;
 
-import java.net.InetSocketAddress;
-import java.net.Socket;
+import java.io.Serializable;
 
 /**
  * Message
  */
 public abstract class Message implements Serializable {
-	
+
 }
