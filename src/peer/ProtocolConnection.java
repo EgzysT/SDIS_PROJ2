@@ -173,4 +173,25 @@ public class ProtocolConnection extends Connection {
 			return false;
 		}
 	}
+
+
+	/**
+     * Listen to requests
+     * @return Request received
+     */
+    public ProtocolMessage listen() {
+
+        if (client == null)
+            return null;
+
+		ProtocolMessage msg = null;
+
+        try {
+            msg = (ProtocolMessage) receive();
+        } catch (IOException e) {
+            Logger.warning("Protocol", "failed to listen to request");
+        }
+
+        return msg;
+    }
 }
