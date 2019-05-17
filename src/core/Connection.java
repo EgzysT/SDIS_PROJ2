@@ -6,15 +6,28 @@ import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+/**
+ * Connection's abstraction
+*/
 public abstract class Connection {
 
     // TODO change to ssl socket later
+
+    /** Connection' socket */
     protected Socket client;
 
+    /**
+     * Create a new connection
+     * @param node Client's socket
+     */
     protected Connection(Socket node) {
         client = node;
     }
 
+    /**
+     * Create a new connection
+     * @param addr Server's address
+     */
     protected Connection(InetSocketAddress addr) {
         try {
             client = new Socket(addr.getHostName(), addr.getPort());
@@ -23,12 +36,22 @@ public abstract class Connection {
         }
     }
 
+    /**
+     * Sends a message
+     * @param message Message to send
+     * @throws IOException
+     */
     protected void send(Message message) throws IOException {
         ObjectOutputStream os = new ObjectOutputStream(client.getOutputStream());
         os.writeObject(message);
         os.flush();
     }
 
+    /**
+     * Receives a message
+     * @return Message received
+     * @throws IOException
+     */
     protected Message receive() throws IOException {
         Message message = null;
 
@@ -43,6 +66,10 @@ public abstract class Connection {
         return message;
     }
 
+    /**
+     * Closes connection
+     * @throws IOException
+     */
     protected void close() throws IOException {
         client.close();
     }

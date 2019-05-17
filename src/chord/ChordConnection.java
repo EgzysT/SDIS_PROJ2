@@ -7,18 +7,32 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+/**
+ * Chord' connection
+ */
 class ChordConnection extends Connection {
 
-    // TODO add error checking like invalid reply or FAIL
-
+    /**
+     * Creates a new chord's connection
+     * @param node Client's socket
+     */
     ChordConnection(Socket node) {
         super(node);
     }
 
+    /**
+     * Creates a new chord's connection
+     * @param addr Server's address
+     */
     ChordConnection(InetSocketAddress addr) {
         super(addr);
     }
 
+    /**
+     * Requests closest node to given key
+     * @param key Identifier to search for
+     * @return Closest node to given key
+     */
     NodeInfo findClosest(Integer key) {
 
         if (client == null)
@@ -37,6 +51,11 @@ class ChordConnection extends Connection {
         return closest;
     }
 
+    /**
+     * Requests successor to given key
+     * @param key Identifier to search for
+     * @return Successor node to given key
+     */
     NodeInfo findSuccessor(Integer key) {
 
         if (client == null)
@@ -55,6 +74,10 @@ class ChordConnection extends Connection {
         return successor;
     }
 
+    /**
+     * Requests node's successor
+     * @return Node's successor
+     */
     NodeInfo getSuccessor() {
 
         if (client == null)
@@ -73,6 +96,10 @@ class ChordConnection extends Connection {
         return successor;
     }
 
+    /**
+     * Requests node's predecessor
+     * @return Node's predecessor
+     */
     NodeInfo getPredecessor() {
 
         if (client == null)
@@ -91,6 +118,10 @@ class ChordConnection extends Connection {
         return predecessor;
     }
 
+    /**
+     * Notifies node
+     * @param node Current node
+     */
     void notify(NodeInfo node) {
 
         if (client == null)
@@ -104,6 +135,9 @@ class ChordConnection extends Connection {
         }
     }
 
+    /**
+     * Ask for node's state
+     */
     void debug() {
 
         if (client == null)
@@ -117,6 +151,10 @@ class ChordConnection extends Connection {
         }
     }
 
+    /**
+     * Listen to requests
+     * @return Request received
+     */
     ChordMessage listen() {
 
         if (client == null)
@@ -133,6 +171,10 @@ class ChordConnection extends Connection {
         return message;
     }
 
+    /**
+     * Sends a reply to request
+     * @param node
+     */
     void reply(NodeInfo node) {
 
         if (client == null)
@@ -146,6 +188,10 @@ class ChordConnection extends Connection {
         }
     }
 
+    /**
+     * Checks if connection is alive
+     * @return True if connection is alive, false otherwise
+     */
     boolean alive() {
         boolean alive = client != null;
 

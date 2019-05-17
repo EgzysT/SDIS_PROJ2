@@ -2,10 +2,18 @@ package chord;
 
 import core.Worker;
 
+/**
+ * Chord's worker
+ */
 class ChordWorker extends Worker {
 
+    /** Connection */
     private ChordConnection connection;
 
+    /**
+     * Creates a new chord's worker
+     * @param connection Connection
+     */
     ChordWorker(ChordConnection connection) {
         this.connection = connection;
     }

@@ -9,10 +9,22 @@ import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Node's info
+ */
 class NodeInfo implements Serializable {
+
+    /** Identifier */
     Integer identifier;
+
+    /** Address */
     InetSocketAddress address;
 
+    /**
+     * Creates a new node's info
+     * @param id Identifier
+     * @param addr Address
+     */
     NodeInfo(Integer id, InetSocketAddress addr) {
         identifier = id;
         address = addr;
@@ -24,24 +36,46 @@ class NodeInfo implements Serializable {
     }
 }
 
+/**
+ * Chord's node
+ */
 public final class ChordNode {
 
     // TODO add stuff for fault tolerance
 
+    /** Singleton instance */
     private static ChordNode instance;
+
+    /** Node's info */
     private static NodeInfo info;
+
+    /** Finger table */
     private static NodeInfo[] finger_table;
+
+    /** Predecessor */
     private static NodeInfo predecessor;
 
+    /**
+     * Constructor
+     */
     private ChordNode() {}
 
+    /**
+     * Creates a new node's instance, if necessary, and returns it
+     * @return Node's instance
+     */
     static ChordNode instance() {
 
         if (instance == null)
             instance = new ChordNode();
+
         return instance;
     }
 
+    /**
+     * Initializes node's properties
+     * @param addr Address
+     */
     private void init(InetSocketAddress addr) {
 
         info = new NodeInfo(
@@ -52,6 +86,9 @@ public final class ChordNode {
         finger_table = new NodeInfo[Chord.m];
     }
 
+    /**
+     * Initializes node's threads
+     */
     private void initThreads() {
 
         try {
@@ -87,6 +124,9 @@ public final class ChordNode {
         }
     }
 
+    /**
+     * Initializes supernode
+     */
     void initSuperNode() {
 
         init(Chord.supernode);
@@ -99,6 +139,10 @@ public final class ChordNode {
         Logger.info("Chord", "starting super node " + info.identifier + " at " + info.address);
     }
 
+    /**
+     * Initializes node
+     * @param addr Address
+     */
     void initNode(InetSocketAddress addr) {
 
         init(addr);
@@ -117,6 +161,11 @@ public final class ChordNode {
         Logger.info("Chord", "starting node " + info.identifier + " at " + info.address);
     }
 
+    /**
+     * Finds successor of given key
+     * @param key Identifier
+     * @return Successor of given key
+     */
     NodeInfo findSuccessor(Integer key) {
 
         NodeInfo node = info;
@@ -129,27 +178,20 @@ public final class ChordNode {
             else
                 node = new ChordConnection(node.address).findClosest(key);
 
-//            // TODO
-//            if (node == null) {
-//                node = info;
-//                System.out.println("Shouldn't happen1");
-//            }
-
             if (node.equals(info))
                 successor = successor();
             else
                 successor = new ChordConnection(node.address).getSuccessor();
-
-//            // TODO
-//            if (successor == null) {
-//                successor = info;
-//                System.out.println("Shouldn't happen2");
-//            }
         }
 
         return successor;
     }
 
+    /**
+     * Finds closest preceding ndoe of given key in the finger table
+     * @param key Identifier
+     * @return Closest preceding node of given key
+     */
     NodeInfo closestPrecedingNode(Integer key) {
 
         for (int i = Chord.m - 1; i >= 0; i--) {
@@ -171,6 +213,9 @@ public final class ChordNode {
         return info;
     }
 
+    /**
+     * Checks if predecessor is alive
+     */
     private void checkPredecessor() {
 
         if (predecessor() != null && !predecessor().equals(info) && !new ChordConnection(predecessor().address).alive()) {
@@ -189,6 +234,9 @@ public final class ChordNode {
         );
     }
 
+    /**
+     * Stabilizes node and notifies successor of node's existence
+     */
     private void stabilize() {
 
         NodeInfo x;
@@ -198,19 +246,15 @@ public final class ChordNode {
         else
             x = new ChordConnection(successor().address).getPredecessor();
 
-//        System.out.println("asked node " + successor().identifier + " for predecessor");
-
         if (x == null) {
             if (Chord.supernode.equals(info.address))
                 successor(findSuccessor(info.identifier));
             else
                 successor(new ChordConnection(Chord.supernode).findSuccessor(info.identifier));
 
-//            // TODO
-//            if (successor() == null) {
-//                successor(info);
-//                System.out.println("Shouldn't happen3");
-//            }
+            // If supernode is offline
+            if (successor() == null)
+                successor(info);
 
             Logger.fine("Chord", "successor not alive, updating");
         } else {
@@ -229,6 +273,10 @@ public final class ChordNode {
         );
     }
 
+    /**
+     * Checks if given node is predecessor
+     * @param node Possible predecessor node
+     */
     void notify(NodeInfo node) {
 
         if (predecessor == null || Utils.in_range(node.identifier, predecessor.identifier, info.identifier, false)) {
@@ -237,15 +285,13 @@ public final class ChordNode {
         }
     }
 
+    /**
+     * Fixes finger i of node's finger table
+     * @param i Finger's number
+     */
     private void fixFinger(Integer i) {
 
         finger_table[i] = findSuccessor(Utils.start(info.identifier, i + 1));
-
-//        // TODO
-//        if (finger_table[i] == null) {
-//            finger_table[i] = info;
-//            System.out.println("Shouldn't happen4");
-//        }
 
         Logger.fine("Chord", "updated finger " + (i + 1));
 
@@ -256,18 +302,34 @@ public final class ChordNode {
         );
     }
 
+    /**
+     * Get node's successor
+     * @return Node's successor
+     */
     NodeInfo successor() {
         return finger_table[0];
     }
 
+    /**
+     * Get node's predecessor
+     * @return Node's predecessor
+     */
     NodeInfo predecessor() {
         return predecessor;
     }
 
+    /**
+     * Set node's successor
+     * @param node New node's successor
+     */
     private void successor(NodeInfo node) {
         finger_table[0] = node;
     }
 
+    /**
+     * Set node's predecessor
+     * @param node New node's predecessor
+     */
     private void predecessor(NodeInfo node) {
         predecessor = node;
     }
