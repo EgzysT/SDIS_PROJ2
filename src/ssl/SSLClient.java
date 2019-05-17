@@ -1,4 +1,4 @@
-package com.ssl;
+package ssl;
 
 import javax.net.ssl.*;
 import java.io.*;
@@ -80,10 +80,10 @@ public class SSLClient {
         }
 
         //Sets client certificates
-        System.setProperty("javax.net.ssl.keyStore", System.getProperty("user.dir") + File.separator + "src" + File.separator + "com" + File.separator + "ssl" + File.separator + "client.keys");
+        System.setProperty("javax.net.ssl.keyStore", System.getProperty("user.dir") + File.separator + "src" + File.separator + "ssl" + File.separator + "client.keys");
         System.setProperty("javax.net.ssl.keyStorePassword", "123456");
 
-        System.setProperty("javax.net.ssl.trustStore", System.getProperty("user.dir") + File.separator + "src" + File.separator + "com" + File.separator + "ssl" + File.separator + "truststore");
+        System.setProperty("javax.net.ssl.trustStore", System.getProperty("user.dir") + File.separator + "src" + File.separator + "ssl" + File.separator + "truststore");
         System.setProperty("javax.net.ssl.trustStorePassword", "123456");
 
         SSLClient sslClient = new SSLClient(args[0], Integer.parseInt(args[1]));

@@ -4,9 +4,14 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+/**
+    @brief Chord settings
+ */
 class Chord {
 
-    // m must be large enough to make the probability of collisions low (2^m nodes)
+    /**
+     * Identifier space's bits (up to 2^m nodes)
+     */
     static Integer m;
     static InetSocketAddress supernode;
     static ScheduledExecutorService executor;
@@ -16,4 +21,6 @@ class Chord {
         supernode = new InetSocketAddress("localhost", 8000);
         executor = Executors.newScheduledThreadPool(2);
     }
+
+    private Chord() {}
 }

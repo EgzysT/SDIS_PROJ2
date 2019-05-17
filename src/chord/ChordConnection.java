@@ -28,7 +28,7 @@ class ChordConnection extends Connection {
 
         try {
             send(new ChordMessage(key).type(ChordMessage.MessageType.CLOSEST_PRECEDING_NODE));
-            closest = receive().node;
+            closest = ((ChordMessage) receive()).node;
             close();
         } catch (IOException e) {
             Logger.warning("Chord", "failed to ask for closest preceding node");
@@ -46,7 +46,7 @@ class ChordConnection extends Connection {
 
         try {
             send(new ChordMessage(key).type(ChordMessage.MessageType.FIND_SUCCESSOR));
-            successor = receive().node;
+            successor = ((ChordMessage) receive()).node;
             close();
         } catch (IOException e) {
             Logger.warning("Chord", "failed to ask for finding successor");
@@ -64,7 +64,7 @@ class ChordConnection extends Connection {
 
         try {
             send(new ChordMessage().type(ChordMessage.MessageType.GET_SUCCESSOR));
-            successor = receive().node;
+            successor = ((ChordMessage) receive()).node;
             close();
         } catch (IOException e) {
             Logger.warning("Chord", "failed to ask for successor");
@@ -82,7 +82,7 @@ class ChordConnection extends Connection {
 
         try {
             send(new ChordMessage().type(ChordMessage.MessageType.GET_PREDECESSOR));
-            predecessor = receive().node;
+            predecessor = ((ChordMessage) receive()).node;
             close();
         } catch (IOException e) {
             Logger.warning("Chord", "failed to ask for predecessor");
@@ -125,7 +125,7 @@ class ChordConnection extends Connection {
         ChordMessage message = null;
 
         try {
-            message = receive();
+            message = (ChordMessage) receive();
         } catch (IOException e) {
             Logger.warning("Chord", "failed to listen to request");
         }

@@ -1,8 +1,5 @@
 package core;
 
-import chord.ChordMessage;
-import utils.Logger;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -26,18 +23,18 @@ public abstract class Connection {
         }
     }
 
-    protected void send(ChordMessage message) throws IOException {
+    protected void send(Message message) throws IOException {
         ObjectOutputStream os = new ObjectOutputStream(client.getOutputStream());
         os.writeObject(message);
         os.flush();
     }
 
-    protected ChordMessage receive() throws IOException {
-        ChordMessage message = null;
+    protected Message receive() throws IOException {
+        Message message = null;
 
         try {
             ObjectInputStream is = new ObjectInputStream(client.getInputStream());
-            message = (ChordMessage) is.readObject();
+            message = (Message) is.readObject();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             System.exit(-1);

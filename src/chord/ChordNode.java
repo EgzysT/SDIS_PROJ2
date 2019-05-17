@@ -129,22 +129,22 @@ public final class ChordNode {
             else
                 node = new ChordConnection(node.address).findClosest(key);
 
-            // TODO
-            if (node == null) {
-                node = info;
-                System.out.println("Shouldn't happen1");
-            }
+//            // TODO
+//            if (node == null) {
+//                node = info;
+//                System.out.println("Shouldn't happen1");
+//            }
 
             if (node.equals(info))
                 successor = successor();
             else
                 successor = new ChordConnection(node.address).getSuccessor();
 
-            // TODO
-            if (successor == null) {
-                successor = info;
-                System.out.println("Shouldn't happen2");
-            }
+//            // TODO
+//            if (successor == null) {
+//                successor = info;
+//                System.out.println("Shouldn't happen2");
+//            }
         }
 
         return successor;
@@ -206,11 +206,11 @@ public final class ChordNode {
             else
                 successor(new ChordConnection(Chord.supernode).findSuccessor(info.identifier));
 
-            // TODO
-            if (successor() == null) {
-                successor(info);
-                System.out.println("Shouldn't happen3");
-            }
+//            // TODO
+//            if (successor() == null) {
+//                successor(info);
+//                System.out.println("Shouldn't happen3");
+//            }
 
             Logger.fine("Chord", "successor not alive, updating");
         } else {
@@ -241,11 +241,11 @@ public final class ChordNode {
 
         finger_table[i] = findSuccessor(Utils.start(info.identifier, i + 1));
 
-        // TODO
-        if (finger_table[i] == null) {
-            finger_table[i] = info;
-            System.out.println("Shouldn't happen4");
-        }
+//        // TODO
+//        if (finger_table[i] == null) {
+//            finger_table[i] = info;
+//            System.out.println("Shouldn't happen4");
+//        }
 
         Logger.fine("Chord", "updated finger " + (i + 1));
 

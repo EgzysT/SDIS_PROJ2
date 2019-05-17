@@ -1,8 +1,8 @@
 package chord;
 
-import java.io.Serializable;
+import core.Message;
 
-public class ChordMessage implements Serializable {
+    public class ChordMessage extends Message {
 
     enum MessageType {
         CLOSEST_PRECEDING_NODE,
