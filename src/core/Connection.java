@@ -1,8 +1,5 @@
 package core;
 
-import chord.ChordMessage;
-import utils.Logger;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
