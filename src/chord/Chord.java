@@ -9,11 +9,13 @@ import java.util.concurrent.ScheduledExecutorService;
  */
 class Chord {
 
-    /**
-     * Identifier space's bits (up to 2^m nodes)
-     */
+    /** Identifier space's bits (up to 2^m nodes) */
     static Integer m;
+
+    /** Supernode's address */
     static InetSocketAddress supernode;
+
+    /** Chord's executor */
     static ScheduledExecutorService executor;
 
     static {

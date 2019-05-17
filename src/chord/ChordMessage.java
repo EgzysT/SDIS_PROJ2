@@ -30,6 +30,7 @@ import core.Message;
         return this;
     }
 
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder()
                 .append(type.toString())
