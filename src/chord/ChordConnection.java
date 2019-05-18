@@ -1,11 +1,11 @@
 package chord;
 
 import core.Connection;
+import ssl.SSLSocket;
 import utils.Logger;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 
 /**
  * Chord' connection
@@ -16,7 +16,7 @@ class ChordConnection extends Connection {
      * Creates a new chord's connection
      * @param node Client's socket
      */
-    ChordConnection(Socket node) {
+    ChordConnection(SSLSocket node) {
         super(node);
     }
 
@@ -41,9 +41,9 @@ class ChordConnection extends Connection {
         NodeInfo closest = null;
 
         try {
-            send(new ChordMessage(key).type(ChordMessage.MessageType.CLOSEST_PRECEDING_NODE));
-            closest = ((ChordMessage) receive()).node;
-            close();
+            client.send(new ChordMessage(key).type(ChordMessage.MessageType.CLOSEST_PRECEDING_NODE));
+            closest = ((ChordMessage) client.receive()).node;
+            client.close();
         } catch (IOException e) {
             Logger.warning("Chord", "failed to ask for closest preceding node");
         }
@@ -64,9 +64,9 @@ class ChordConnection extends Connection {
         NodeInfo successor = null;
 
         try {
-            send(new ChordMessage(key).type(ChordMessage.MessageType.FIND_SUCCESSOR));
-            successor = ((ChordMessage) receive()).node;
-            close();
+            client.send(new ChordMessage(key).type(ChordMessage.MessageType.FIND_SUCCESSOR));
+            successor = ((ChordMessage) client.receive()).node;
+            client.close();
         } catch (IOException e) {
             Logger.warning("Chord", "failed to ask for finding successor");
         }
@@ -86,9 +86,9 @@ class ChordConnection extends Connection {
         NodeInfo successor = null;
 
         try {
-            send(new ChordMessage().type(ChordMessage.MessageType.GET_SUCCESSOR));
-            successor = ((ChordMessage) receive()).node;
-            close();
+            client.send(new ChordMessage().type(ChordMessage.MessageType.GET_SUCCESSOR));
+            successor = ((ChordMessage) client.receive()).node;
+            client.close();
         } catch (IOException e) {
             Logger.warning("Chord", "failed to ask for successor");
         }
@@ -108,9 +108,9 @@ class ChordConnection extends Connection {
         NodeInfo predecessor = null;
 
         try {
-            send(new ChordMessage().type(ChordMessage.MessageType.GET_PREDECESSOR));
-            predecessor = ((ChordMessage) receive()).node;
-            close();
+            client.send(new ChordMessage().type(ChordMessage.MessageType.GET_PREDECESSOR));
+            predecessor = ((ChordMessage) client.receive()).node;
+            client.close();
         } catch (IOException e) {
             Logger.warning("Chord", "failed to ask for predecessor");
         }
@@ -128,8 +128,8 @@ class ChordConnection extends Connection {
             return;
 
         try {
-            send(new ChordMessage(node).type(ChordMessage.MessageType.NOTIFY));
-            close();
+            client.send(new ChordMessage(node).type(ChordMessage.MessageType.NOTIFY));
+            client.close();
         } catch (IOException e) {
             Logger.warning("Chord", "failed to notify");
         }
@@ -144,8 +144,8 @@ class ChordConnection extends Connection {
             return;
 
         try {
-            send(new ChordMessage().type(ChordMessage.MessageType.DEBUG));
-            close();
+            client.send(new ChordMessage().type(ChordMessage.MessageType.DEBUG));
+            client.close();
         } catch (IOException e) {
             Logger.warning("Chord", "failed to notify");
         }
@@ -163,7 +163,7 @@ class ChordConnection extends Connection {
         ChordMessage message = null;
 
         try {
-            message = (ChordMessage) receive();
+            message = (ChordMessage) client.receive();
         } catch (IOException e) {
             Logger.warning("Chord", "failed to listen to request");
         }
@@ -181,8 +181,8 @@ class ChordConnection extends Connection {
             return;
 
         try {
-            send(new ChordMessage(node).type(ChordMessage.MessageType.NODE));
-            close();
+            client.send(new ChordMessage(node).type(ChordMessage.MessageType.NODE));
+            client.close();
         } catch (IOException e) {
             Logger.warning("Chord", "failed to reply to request");
         }
@@ -197,8 +197,8 @@ class ChordConnection extends Connection {
 
         try {
             if (alive) {
-                send(new ChordMessage().type(ChordMessage.MessageType.ALIVE));
-                close();
+                client.send(new ChordMessage().type(ChordMessage.MessageType.ALIVE));
+                client.close();
             }
         } catch (IOException e) {
             Logger.warning("Chord", "failed to check connection");

@@ -1,9 +1,9 @@
 package chord;
 
 import core.Dispatcher;
+import ssl.SSLServerSocket;
 
 import java.io.IOException;
-import java.net.ServerSocket;
 
 /**
  * Chord's dispatcher
@@ -11,7 +11,7 @@ import java.net.ServerSocket;
 public class ChordDispatcher extends Dispatcher {
 
     /** Server socket */
-    private ServerSocket server;
+    private SSLServerSocket server;
 
     /**
      * Creates a new chord's dispatcher
@@ -19,7 +19,7 @@ public class ChordDispatcher extends Dispatcher {
      * @throws IOException
      */
     ChordDispatcher(Integer port) throws IOException {
-        server = new ServerSocket(port);
+        server = new SSLServerSocket(port);
     }
 
     @Override

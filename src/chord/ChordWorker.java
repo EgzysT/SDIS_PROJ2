@@ -21,9 +21,8 @@ class ChordWorker extends Worker {
     @Override
     protected void work() {
 
-        // TODO run async, possible??
-
         ChordMessage request = connection.listen();
+        System.out.println(request);
 
         if (request == null)
             connection.reply(null);

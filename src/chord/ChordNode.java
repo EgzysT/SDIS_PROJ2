@@ -3,6 +3,7 @@ package chord;
 import utils.Logger;
 import utils.Utils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
@@ -263,7 +264,10 @@ public final class ChordNode {
                 Logger.fine("Chord", "updated successor");
             }
 
-            new ChordConnection(successor().address).notify(info);
+            if (successor().equals(info))
+                notify(info);
+            else
+                new ChordConnection(successor().address).notify(info);
         }
 
         Chord.executor.schedule(
@@ -358,6 +362,15 @@ public final class ChordNode {
     }
 
     public static void main(String[] args) {
+
+        String sslDir = "C:\\Users\\Miguel Teixeira\\Desktop\\SDIS_PROJ2\\src\\ssl\\";
+
+        System.setProperty("javax.net.ssl.keyStore", sslDir + "common.keys");
+        System.setProperty("javax.net.ssl.keyStorePassword", "123456");
+
+        System.setProperty("javax.net.ssl.trustStore", sslDir + "truststore");
+        System.setProperty("javax.net.ssl.trustStorePassword", "123456");
+
 
         if (args[0].equals("SUPER")) {
             ChordNode.instance().initSuperNode();
