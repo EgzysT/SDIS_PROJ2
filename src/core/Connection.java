@@ -1,8 +1,11 @@
 package core;
 
-import ssl.SSLSocket;
+import ssl.SocketFactory;
 
-import java.io.IOException;;
+import javax.net.ssl.SSLSocket;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 
 /**
@@ -27,9 +30,39 @@ public abstract class Connection {
      */
     protected Connection(InetSocketAddress addr) {
         try {
-            client = new SSLSocket(addr.getHostName(), addr.getPort());
+            client = SocketFactory.getSocket(addr.getHostName(), addr.getPort());
         } catch (IOException e) {
            // Ignore
         }
+    }
+
+    /**
+     * Sends a message
+     * @param message Message to send
+     * @throws IOException
+     */
+    protected void send(Message message) throws IOException {
+        ObjectOutputStream os = new ObjectOutputStream(client.getOutputStream());
+        os.writeObject(message);
+        os.flush();
+    }
+
+    /**
+     * Receives a message
+     * @return Message received
+     * @throws IOException
+     */
+    protected Message receive() throws IOException {
+        Message message = null;
+
+        try {
+            ObjectInputStream is = new ObjectInputStream(client.getInputStream());
+            message = (Message) is.readObject();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
+        return message;
     }
 }

@@ -1,8 +1,10 @@
 package chord;
 
 import core.Dispatcher;
-import ssl.SSLServerSocket;
+import ssl.SocketFactory;
 
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLSocket;
 import java.io.IOException;
 
 /**
@@ -19,12 +21,12 @@ public class ChordDispatcher extends Dispatcher {
      * @throws IOException
      */
     ChordDispatcher(Integer port) throws IOException {
-        server = new SSLServerSocket(port);
+        server = SocketFactory.getServerSocket(port);
     }
 
     @Override
     protected void awaitConnection() throws IOException {
-        ChordConnection connection = new ChordConnection(server.accept());
+        ChordConnection connection = new ChordConnection((SSLSocket) server.accept());
         executor.submit(new ChordWorker(connection));
     }
 }
