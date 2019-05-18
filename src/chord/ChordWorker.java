@@ -22,7 +22,6 @@ class ChordWorker extends Worker {
     protected void work() {
 
         ChordMessage request = connection.listen();
-        System.out.println(request);
 
         if (request == null)
             connection.reply(null);

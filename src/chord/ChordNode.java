@@ -363,9 +363,9 @@ public final class ChordNode {
 
     public static void main(String[] args) {
 
-        String sslDir = "C:\\Users\\Miguel Teixeira\\Desktop\\SDIS_PROJ2\\src\\ssl\\";
+        String sslDir = "/home/miguelalexbt/IdeaProjects/SDIS_PROJ2/src/ssl/";
 
-        System.setProperty("javax.net.ssl.keyStore", sslDir + "common.keys");
+        System.setProperty("javax.net.ssl.keyStore", sslDir + "keystore.keys");
         System.setProperty("javax.net.ssl.keyStorePassword", "123456");
 
         System.setProperty("javax.net.ssl.trustStore", sslDir + "truststore");
