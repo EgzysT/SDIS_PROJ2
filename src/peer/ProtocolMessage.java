@@ -1,14 +1,5 @@
 package peer;
 
-import core.Message;
-
-public class ProtocolMessage extends Message {
-
-    ProtocolMessage() {
-
-    }
-}
-
 //import core.Message;
 //
 //public class ProtocolMessage extends Message {

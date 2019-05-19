@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -42,19 +43,20 @@ class NodeInfo implements Serializable {
  */
 public final class ChordNode {
 
-    // TODO add stuff for fault tolerance
-
     /** Singleton instance */
     private static ChordNode instance;
 
     /** Node's info */
-    private static NodeInfo info;
+    private NodeInfo info;
 
     /** Finger table */
-    private static NodeInfo[] finger_table;
+    private NodeInfo[] finger_table;
+
+    /** Successors */
+    private NodeInfo[] successors;
 
     /** Predecessor */
-    private static NodeInfo predecessor;
+    private NodeInfo predecessor;
 
     /**
      * Constructor
@@ -65,7 +67,7 @@ public final class ChordNode {
      * Creates a new node's instance, if necessary, and returns it
      * @return Node's instance
      */
-    static ChordNode instance() {
+    public static ChordNode instance() {
 
         if (instance == null)
             instance = new ChordNode();
@@ -85,6 +87,12 @@ public final class ChordNode {
         );
 
         finger_table = new NodeInfo[Chord.m];
+        successors = new NodeInfo[Chord.r];
+        predecessor = null;
+
+        // TODO try to find a way to use null as initial point
+        for (int i = 0; i < Chord.r; i++)
+            successors[i] = info;
     }
 
     /**
@@ -128,7 +136,7 @@ public final class ChordNode {
     /**
      * Initializes supernode
      */
-    void initSuperNode() {
+    public void initSuperNode() {
 
         init(Chord.supernode);
 
@@ -144,9 +152,11 @@ public final class ChordNode {
      * Initializes node
      * @param addr Address
      */
-    void initNode(InetSocketAddress addr) {
+    public void initNode(InetSocketAddress addr) {
 
         init(addr);
+
+        predecessor(null);
 
         // Check if supernode is alive
         if (!new ChordConnection(Chord.supernode).alive()) {
@@ -154,7 +164,6 @@ public final class ChordNode {
             return;
         }
 
-        predecessor(null);
         successor(new ChordConnection(Chord.supernode).findSuccessor(info.identifier));
 
         initThreads();
@@ -240,35 +249,79 @@ public final class ChordNode {
      */
     private void stabilize() {
 
-        NodeInfo x;
+//        NodeInfo x;
+//
+//        if (successor().equals(info))
+//            x = predecessor();
+//        else
+//            x = new ChordConnection(successor().address).getPredecessor();
+//
+//        if (x == null) {
+//            if (Chord.supernode.equals(info.address))
+//                successor(findSuccessor(info.identifier));
+//            else
+//                successor(new ChordConnection(Chord.supernode).findSuccessor(info.identifier));
+//
+//            // If supernode is offline
+//            if (successor() == null)
+//                successor(info);
+//
+//            Logger.fine("Chord", "successor not alive, updating");
+//        } else {
+//            if (Utils.in_range(x.identifier, info.identifier, successor().identifier, false)) {
+//                successor(x);
+//                Logger.fine("Chord", "updated successor");
+//            }
+//
+//            if (successor().equals(info))
+//                notify(info);
+//            else
+//                new ChordConnection(successor().address).notify(info);
+//        }
 
-        if (successor().equals(info))
-            x = predecessor();
-        else
-            x = new ChordConnection(successor().address).getPredecessor();
+        // TODO testing
 
-        if (x == null) {
-            if (Chord.supernode.equals(info.address))
-                successor(findSuccessor(info.identifier));
+        int i = 0;
+        NodeInfo node = info;
+
+        while (i < Chord.r) {
+
+            NodeInfo p;
+
+            if (successors[i].equals(info))
+                p = predecessor();
             else
-                successor(new ChordConnection(Chord.supernode).findSuccessor(info.identifier));
+                p = new ChordConnection(successors[i].address).getPredecessor();
 
-            // If supernode is offline
-            if (successor() == null)
-                successor(info);
+            if (p == null) {
+                if (Chord.supernode.equals(info.address))
+                    successors[i] = findSuccessor(node.identifier);
+                else
+                    successors[i] = new ChordConnection(Chord.supernode).findSuccessor(node.identifier);
 
-            Logger.fine("Chord", "successor not alive, updating");
-        } else {
-            if (Utils.in_range(x.identifier, info.identifier, successor().identifier, false)) {
-                successor(x);
-                Logger.fine("Chord", "updated successor");
+                // Supernode is offline
+                if (successors[i] == null)
+                    successor(node);
+
+            } else {
+                if (Utils.in_range(p.identifier, node.identifier, successors[i].identifier, false)) {
+                    successors[i] = p;
+                }
             }
 
-            if (successor().equals(info))
-                notify(info);
-            else
-                new ChordConnection(successor().address).notify(info);
+            node = successors[i];
+            i++;
         }
+
+        System.out.println(ChordNode.instance());
+
+        // Update first entry of finger table
+        successor(successors[0]);
+
+        if (successor().equals(info))
+            notify(info);
+        else
+            new ChordConnection(successor().address).notify(info);
 
         Chord.executor.schedule(
                 this::stabilize,
@@ -328,6 +381,7 @@ public final class ChordNode {
      */
     private void successor(NodeInfo node) {
         finger_table[0] = node;
+        successors[0] = node;
     }
 
     /**
@@ -358,11 +412,18 @@ public final class ChordNode {
                     .append('\n');
         }
 
+        for (int i = 0; i < Chord.r; i++) {
+            sb.append("Successor #")
+                    .append(i + 1)
+                    .append(": ")
+                    .append(successors[i])
+                    .append('\n');
+        }
+
         return sb.toString();
     }
 
     public static void main(String[] args) {
-
         String sslDir = "/home/miguelalexbt/IdeaProjects/SDIS_PROJ2/src/ssl/";
 
         System.setProperty("javax.net.ssl.keyStore", sslDir + "keystore.keys");
@@ -370,7 +431,6 @@ public final class ChordNode {
 
         System.setProperty("javax.net.ssl.trustStore", sslDir + "truststore");
         System.setProperty("javax.net.ssl.trustStorePassword", "123456");
-
 
         if (args[0].equals("SUPER")) {
             ChordNode.instance().initSuperNode();

@@ -1,30 +1,17 @@
+import peer.Peer;
+
 public class Main {
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
 
-//        ChordServerSocket server1 = new ChordServerSocket(8001);
-//        ChordServerSocket server2 = new ChordServerSocket(8002);
-//
-//        new Thread(() -> {
-//            server1.waitConnection();
-//        }).start();
-//
-//        Connection query = new Connection(n);
+        String sslDir = "/home/miguelalexbt/IdeaProjects/SDIS_PROJ2/src/ssl/";
 
-//        ChordNode node1 = new ChordNode(new InetSocketAddress("localhost", 8080));
+        System.setProperty("javax.net.ssl.keyStore", sslDir + "keystore.keys");
+        System.setProperty("javax.net.ssl.keyStorePassword", "123456");
 
+        System.setProperty("javax.net.ssl.trustStore", sslDir + "truststore");
+        System.setProperty("javax.net.ssl.trustStorePassword", "123456");
 
-//        TCPSocket socket1 = new TCPSocket(8621);
-//        TCPSocket socket2 = new TCPSocket(8622);
-
-//        new Thread(() -> {
-//            while (true)
-//                socket1.receive();
-//        }).start();
-//
-//        while (true) {
-//            socket2.send(new InetSocketAddress("localhost", 8621), "Hello");
-//            Thread.sleep(500);
-//        }
+//        Peer.instance().init();
     }
 }
