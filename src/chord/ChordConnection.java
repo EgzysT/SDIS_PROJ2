@@ -174,7 +174,7 @@ class ChordConnection extends Connection {
 
     /**
      * Sends a reply to request
-     * @param node
+     * @param node Node
      */
     void reply(NodeInfo node) {
 
@@ -194,8 +194,6 @@ class ChordConnection extends Connection {
      * @return True if connection is alive, false otherwise
      */
     boolean alive() {
-        boolean alive = client != null;
-
         try {
             if (alive) {
                 send(new ChordMessage().type(ChordMessage.MessageType.ALIVE));
