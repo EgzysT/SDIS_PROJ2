@@ -1,6 +1,5 @@
 package chord;
 
-import jdk.nashorn.internal.runtime.regexp.joni.NodeOptInfo;
 import utils.Logger;
 import utils.Utils;
 
@@ -87,13 +86,7 @@ public final class ChordNode {
                 addr
         );
 
-        finger_table = new ConcurrentHashMap<Integer, NodeInfo>();
-
-//        {{
-//            for (int i = 1; i <= Chord.m; i++) {
-//                put(i, new NodeInfo(null, null));
-//            }
-//        }};
+        finger_table = new ConcurrentHashMap<>();
 
         successors = new ConcurrentHashMap<Integer, NodeInfo>() {{
             for (int i = 1; i <= Chord.r; i++) {

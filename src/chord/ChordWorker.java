@@ -23,8 +23,10 @@ class ChordWorker extends Worker {
 
         ChordMessage request = connection.listen();
 
-        if (request == null)
+        if (request == null) {
             connection.reply(null);
+            return;
+        }
 
         switch (request.type) {
             case CLOSEST_PRECEDING_NODE:

@@ -1,7 +1,6 @@
 package chord;
 
 import core.Connection;
-import core.Message;
 import utils.Logger;
 
 import javax.net.ssl.SSLSocket;
