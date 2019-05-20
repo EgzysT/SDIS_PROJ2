@@ -49,7 +49,6 @@ class ChordWorker extends Worker {
                 break;
             case ALIVE:
             case NODE:
-                // Ignore
                 break;
         }
     }

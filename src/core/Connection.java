@@ -15,6 +15,7 @@ public abstract class Connection {
 
     /** Connection' socket */
     protected SSLSocket client;
+    protected Boolean alive;
 
     /**
      * Create a new connection
@@ -22,6 +23,7 @@ public abstract class Connection {
      */
     protected Connection(SSLSocket node) {
         client = node;
+        alive = true;
     }
 
     /**
@@ -34,6 +36,8 @@ public abstract class Connection {
         } catch (IOException e) {
            // Ignore
         }
+
+        alive = client != null;
     }
 
     /**

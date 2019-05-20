@@ -7,9 +7,7 @@ import java.util.logging.LogRecord;
 
 public final class Logger {
 
-//    private final static java.util.logging.Logger Logger = java.util.logging.Logger.getLogger("Logger");
-
-    private static java.util.logging.Logger logger; // = java.util.logging.Logger.getAnonymousLogger();
+    private static java.util.logging.Logger logger;
 
     static {
         final Level loggerLevel = Level.FINE;

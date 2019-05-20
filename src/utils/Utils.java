@@ -58,10 +58,6 @@ public final class Utils {
         return hexString.toString();
     }
 
-    public static Integer start(Integer n, Integer i) {
-        return n + (int) Math.pow(2, i - 1);
-    }
-
     public static boolean in_range(Integer value, Integer lower, Integer upper, Boolean closed) {
 
         if (lower < upper) {
@@ -75,5 +71,10 @@ public final class Utils {
             else
                 return value > lower || value < upper;
         }
+    }
+
+    public static void clearScreen() {
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
     }
 }
