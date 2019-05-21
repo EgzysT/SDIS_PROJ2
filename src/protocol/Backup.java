@@ -1,56 +1,75 @@
 package protocol;
 
+import chord.ChordNode;
 import store.Store;
 import utils.Logger;
 import utils.Utils;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousFileChannel;
 import java.nio.channels.CompletionHandler;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static java.nio.file.StandardOpenOption.READ;
 
+// TODO replication, handle error in connection
+
 public class Backup {
 
-    private String filePath;
+    static Map<String, Boolean> instances;
 
-    public Backup(String filePath) {
-        this.filePath = filePath;
+    static {
+        instances = new ConcurrentHashMap<>();
     }
 
-    private void init() {
+    private Backup() {}
+
+    private static Boolean checkRequirements(String filePath, String fileID) {
 
         // Check if file exists
         if (!Files.exists(Paths.get(filePath))) {
             Logger.warning("Backup", "file" + filePath + " does not exist");
-            return;
+            return false;
         }
-
-        String fileID = Utils.generateFileID(filePath);
 
         // Check if file is already backed up
         if (Store.isBackedUp(fileID)) {
-            Logger.fine("Backup", "file " + fileID + " is already backed up");
-            return;
+            Logger.warning("Backup", "file " + fileID + " is already backed up");
+            return false;
         }
 
         // Check if file is free
+        if (ProtocolHandler.isFileBusy(fileID)) {
+            Logger.warning("Backup", "found another protocol instance for file " + fileID);
+            return false;
+        }
 
+        // TODO Check if file is modified
+        // Maybe use file data not in hash but in start of backup
+        // To allow several nodes to recover it
 
-        // Check if file is modified
-
-        Logger.info("Backup", "starting backup protocol for file " + fileID);
-
-        splitFile(filePath);
-
+        return true;
     }
 
-    private void splitFile(String filePath) {
+    public static void backupFile(String filePath) {
+
+        String fileID = Utils.generateFileID(filePath);
+
+        if (!checkRequirements(filePath, fileID))
+            return;
+
+        if (instances.putIfAbsent(fileID, true) != null) {
+            Logger.warning("Backup", "found another backup protocol instance for file " + fileID);
+            return;
+        }
+
+        Logger.info("Backup", "starting backup protocol for file " + fileID);
 
         try {
             Path path = Paths.get(filePath);
@@ -59,10 +78,12 @@ public class Backup {
 
             fileChannel.read(buffer, 0, buffer, new CompletionHandler<Integer, ByteBuffer>() {
 
-                private Integer offset;
+                private Integer chunkNo;
+                private Integer chunkOffset;
 
                 {
-                    offset = 0;
+                    chunkNo = 0;
+                    chunkOffset = 0;
                 }
 
                 @Override
@@ -76,22 +97,40 @@ public class Backup {
                             Logger.severe("Backup", "failed to close file channel");
                         }
 
+                        Store.registerFile(fileID, filePath, chunkNo);
 
-                        // Register file
+                        instances.computeIfPresent(fileID, (k,v) -> null);
+
+//                        System.out.println();
+//                        System.out.println(Store.debug());
+//                        System.out.println();
+
+                        Logger.info("Backup", "completed backup protocol for file " + fileID);
 
                         return;
                     }
 
                     attachment.flip();
-                    backupChunk(attachment.array());
+
+                    // TODO later check for errors
+                    ChordNode.instance().put(
+                            fileID,
+                            chunkNo,
+                            Arrays.copyOfRange(attachment.array(), 0, attachment.remaining())
+                    );
+
                     attachment.clear();
 
-                    offset += result;
+                    chunkNo++;
+                    chunkOffset += result;
 
-                    ProtocolHandler.schedule(
-                            () -> fileChannel.read(attachment, offset, attachment, this),
-                            100
-                    );
+                    fileChannel.read(attachment, chunkOffset, attachment, this);
+
+                    // TODO test @ FEUP
+//                    ProtocolHandler.schedule(
+//                            () -> fileChannel.read(attachment, chunkOffset, attachment, this),
+//                            100
+//                    );
                 }
 
                 @Override
@@ -104,13 +143,4 @@ public class Backup {
             Logger.severe("Backup", "failed to read chunk");
         }
     }
-
-
-    public void backupChunk(byte[] chunk) {
-
-
-
-    }
-
-
 }

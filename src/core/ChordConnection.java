@@ -1,6 +1,6 @@
-package chord;
+package core;
 
-import core.Connection;
+import chord.ChordInfo;
 import utils.Logger;
 
 import javax.net.ssl.SSLSocket;
@@ -8,23 +8,23 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 /**
- * Chord' connection
+ * Chord's connection
  */
-class ChordConnection extends Connection {
+public class ChordConnection extends Connection {
 
     /**
      * Creates a new chord's connection
-     * @param node Client's socket
+     * @param socket Client's socket
      */
-    ChordConnection(SSLSocket node) {
-        super(node);
+    public ChordConnection(SSLSocket socket) {
+        super(socket);
     }
 
     /**
      * Creates a new chord's connection
      * @param addr Server's address
      */
-    ChordConnection(InetSocketAddress addr) {
+    public ChordConnection(InetSocketAddress addr) {
         super(addr);
     }
 
@@ -33,15 +33,15 @@ class ChordConnection extends Connection {
      * @param key Identifier to search for
      * @return Closest node to given key
      */
-    NodeInfo findClosest(Integer key) {
+    public ChordInfo findClosest(Integer key) {
 
         if (client == null)
             return null;
 
-        NodeInfo closest = null;
+        ChordInfo closest = null;
 
         try {
-            send(new ChordMessage(key).type(ChordMessage.MessageType.CLOSEST_PRECEDING_NODE));
+            send(new ChordMessage(ChordMessage.Type.CLOSEST_PRECEDING_NODE, key));
             closest = ((ChordMessage) receive()).node;
             client.close();
         } catch (IOException e) {
@@ -56,15 +56,15 @@ class ChordConnection extends Connection {
      * @param key Identifier to search for
      * @return Successor node to given key
      */
-    NodeInfo findSuccessor(Integer key) {
+    public ChordInfo findSuccessor(Integer key) {
 
         if (client == null)
             return null;
 
-        NodeInfo successor = null;
+        ChordInfo successor = null;
 
         try {
-            send(new ChordMessage(key).type(ChordMessage.MessageType.FIND_SUCCESSOR));
+            send(new ChordMessage(ChordMessage.Type.FIND_SUCCESSOR, key));
             successor = ((ChordMessage) receive()).node;
             client.close();
         } catch (IOException e) {
@@ -78,15 +78,15 @@ class ChordConnection extends Connection {
      * Requests node's successor
      * @return Node's successor
      */
-    NodeInfo getSuccessor() {
+    public ChordInfo getSuccessor() {
 
         if (client == null)
             return null;
 
-        NodeInfo successor = null;
+        ChordInfo successor = null;
 
         try {
-            send(new ChordMessage().type(ChordMessage.MessageType.GET_SUCCESSOR));
+            send(new ChordMessage(ChordMessage.Type.GET_SUCCESSOR));
             successor = ((ChordMessage) receive()).node;
             client.close();
         } catch (IOException e) {
@@ -100,15 +100,15 @@ class ChordConnection extends Connection {
      * Requests node's predecessor
      * @return Node's predecessor
      */
-    NodeInfo getPredecessor() {
+    public ChordInfo getPredecessor() {
 
         if (client == null)
             return null;
 
-        NodeInfo predecessor = null;
+        ChordInfo predecessor = null;
 
         try {
-            send(new ChordMessage().type(ChordMessage.MessageType.GET_PREDECESSOR));
+            send(new ChordMessage(ChordMessage.Type.GET_PREDECESSOR));
             predecessor = ((ChordMessage) receive()).node;
             client.close();
         } catch (IOException e) {
@@ -122,13 +122,13 @@ class ChordConnection extends Connection {
      * Notifies node
      * @param node Current node
      */
-    void notify(NodeInfo node) {
+    public void notify(ChordInfo node) {
 
         if (client == null)
             return;
 
         try {
-            send(new ChordMessage(node).type(ChordMessage.MessageType.NOTIFY));
+            send(new ChordMessage(ChordMessage.Type.NOTIFY, node));
             client.close();
         } catch (IOException e) {
             Logger.warning("Chord", "failed to notify");
@@ -136,19 +136,20 @@ class ChordConnection extends Connection {
     }
 
     /**
-     * Ask for node's state
+     * Checks if connection is alive
+     * @return True if connection is alive, false otherwise
      */
-    void debug() {
-
-        if (client == null)
-            return;
-
+    public boolean alive() {
         try {
-            send(new ChordMessage().type(ChordMessage.MessageType.DEBUG));
-            client.close();
+            if (alive) {
+                send(new ChordMessage(ChordMessage.Type.ALIVE));
+                client.close();
+            }
         } catch (IOException e) {
-            Logger.warning("Chord", "failed to notify");
+            Logger.warning("Chord", "failed to check core");
         }
+
+        return alive;
     }
 
     /**
@@ -175,33 +176,16 @@ class ChordConnection extends Connection {
      * Sends a reply to request
      * @param node Node
      */
-    void reply(NodeInfo node) {
+    void reply(ChordInfo node) {
 
         if (client == null)
             return;
 
         try {
-            send(new ChordMessage(node).type(ChordMessage.MessageType.NODE));
+            send(new ChordMessage(ChordMessage.Type.NODE, node));
             client.close();
         } catch (IOException e) {
             Logger.warning("Chord", "failed to reply to request");
         }
-    }
-
-    /**
-     * Checks if connection is alive
-     * @return True if connection is alive, false otherwise
-     */
-    boolean alive() {
-        try {
-            if (alive) {
-                send(new ChordMessage().type(ChordMessage.MessageType.ALIVE));
-                client.close();
-            }
-        } catch (IOException e) {
-            Logger.warning("Chord", "failed to check connection");
-        }
-
-        return alive;
     }
 }

@@ -3,7 +3,7 @@
 //import java.io.IOException;
 //import java.net.InetSocketAddress;
 //
-//import core.Connection;
+//import core.core;
 //import core.ProtocolMessage;
 //import core.ProtocolMessage.PrtclMsgType;
 //import core.ProtocolMessage.Type;
@@ -12,7 +12,7 @@
 // * ProtocolConnection
 // * TODO: additional verifications in communications. (The sent messages must have the same fileID and chunkNumber as the responses, etc...)
 // */
-//public class ProtocolConnection extends Connection {
+//public class ProtocolConnection extends core {
 //
 //	public ProtocolConnection(Socket socket) {
 //		super(socket);

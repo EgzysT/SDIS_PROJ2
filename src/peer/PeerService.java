@@ -6,7 +6,7 @@ import java.rmi.RemoteException;
 /**
  * Peer's service to clients
  */
-public interface Service extends Remote {
+public interface PeerService extends Remote {
 
     /**
      * Backups a file
@@ -14,4 +14,8 @@ public interface Service extends Remote {
      * @throws RemoteException
      */
     void backup(String filePath) throws RemoteException;
+
+    void restore(String filePath) throws RemoteException;
+
+    void delete(String filePath) throws RemoteException;
 }

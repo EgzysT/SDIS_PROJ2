@@ -7,21 +7,21 @@
 // */
 //public class ProtocolWorker extends Worker {
 //
-//	/** Connection */
-//	private ProtocolConnection connection;
+//	/** core */
+//	private ProtocolConnection core;
 //
 //	/**
 //	 * Creates a new worker
 //	 *
-//	 * @param connection Connection
+//	 * @param core core
 //	 */
-//	ProtocolWorker(ProtocolConnection connection) {
-//		this.connection = connection;
+//	ProtocolWorker(ProtocolConnection core) {
+//		this.core = core;
 //	}
 //
 //	@Override
 //	protected void work() {
-//		ProtocolMessage request = connection.listen();
+//		ProtocolMessage request = core.listen();
 //
 //		if (request == null) {
 //			// TODO: ignore?

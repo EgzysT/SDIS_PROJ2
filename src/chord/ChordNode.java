@@ -1,62 +1,38 @@
 package chord;
 
+import core.ChordConnection;
+import core.ChordDispatcher;
+import core.ProtocolConnection;
+import core.ProtocolDispatcher;
+import store.Store;
 import utils.Logger;
 import utils.Utils;
 
 import java.io.IOException;
-import java.io.Serializable;
-import java.math.BigInteger;
 import java.net.InetSocketAddress;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Node's info
- */
-class NodeInfo implements Serializable {
-
-    /** Identifier */
-    Integer identifier;
-
-    /** Address */
-    InetSocketAddress address;
-
-    /**
-     * Creates a new node's info
-     * @param id Identifier
-     * @param addr Address
-     */
-    NodeInfo(Integer id, InetSocketAddress addr) {
-        identifier = id;
-        address = addr;
-    }
-
-    @Override
-    public String toString() {
-        return identifier + " - " + address;
-    }
-}
-
-/**
  * Chord's node
  */
-public final class ChordNode {
+public final class ChordNode implements ChordService {
 
     /** Singleton instance */
     private static ChordNode instance;
 
-    /** Node's info */
-    private NodeInfo info;
-
     /** Finger table */
-    private Map<Integer, NodeInfo> finger_table;
+    private Map<Integer, ChordInfo> finger_table;
 
     /** Successors */
-    private Map<Integer, NodeInfo> successors;
+    private Map<Integer, ChordInfo> successors;
 
     /** Predecessor */
-    private NodeInfo predecessor;
+    private ChordInfo predecessor;
+
+    /** Node's info */
+    public ChordInfo info;
 
     /**
      * Constructor
@@ -81,14 +57,15 @@ public final class ChordNode {
      */
     private void init(InetSocketAddress addr) {
 
-        info = new NodeInfo(
-                Utils.hash(addr.toString()).mod(new BigInteger("2").pow(Chord.m)).intValue(),
-                addr
+        info = new ChordInfo(
+                Chord.hashToKey(Utils.generateChordID(addr.toString())),
+                addr,
+                new InetSocketAddress("localhost", 0)
         );
 
         finger_table = new ConcurrentHashMap<>();
 
-        successors = new ConcurrentHashMap<Integer, NodeInfo>() {{
+        successors = new ConcurrentHashMap<Integer, ChordInfo>() {{
             for (int i = 1; i <= Chord.r; i++) {
                 put(i, info);
             }
@@ -103,9 +80,14 @@ public final class ChordNode {
     private void initThreads() {
 
         try {
-            // Dispatcher
+            // Chord's Dispatcher
             new Thread(
-                    new ChordDispatcher(info.address.getPort())
+                    new ChordDispatcher(info.chordAddress.getPort())
+            ).start();
+
+            // Protocol's dispatcher
+            new Thread(
+                    new ProtocolDispatcher(info.protocolAddress.getPort())
             ).start();
 
             // Stabilize
@@ -136,39 +118,26 @@ public final class ChordNode {
     }
 
     /**
-     * Initializes super node
+     * Get node's successor
+     * @return Node's successor
      */
-    public void initSuperNode() {
+    public ChordInfo successor() {
+        for (ChordInfo successor : successors.values()) {
+            if (!successor.equals(info) && !new ChordConnection(successor.chordAddress).alive())
+                clearNode(successor);
+            else
+                return successor;
+        }
 
-        init(Chord.supernode);
-
-        predecessor(info);
-        successor(info);
-
-        initThreads();
-
-        Logger.info("Chord", "starting super node " + info.identifier + " at " + info.address);
+        return info;
     }
 
     /**
-     * Initializes node
-     * @param addr Address
+     * Get node's predecessor
+     * @return Node's predecessor
      */
-    public void initNode(InetSocketAddress addr) {
-
-        init(addr);
-
-        if (!new ChordConnection(Chord.supernode).alive()) {
-            Logger.info("Chord", "super node is not alive");
-            return;
-        }
-
-        predecessor(null);
-        successor(new ChordConnection(Chord.supernode).findSuccessor(info.identifier));
-
-        initThreads();
-
-        Logger.info("Chord", "starting node " + info.identifier + " at " + info.address);
+    public ChordInfo predecessor() {
+        return predecessor;
     }
 
     /**
@@ -176,22 +145,24 @@ public final class ChordNode {
      * @param key Identifier
      * @return Successor of given key
      */
-    NodeInfo findSuccessor(Integer key) {
+    public ChordInfo findSuccessor(Integer key) {
 
-        NodeInfo node = info;
-        NodeInfo successor = successor();
+        ChordInfo node = info;
+        ChordInfo successor = successor();
+
+        // TODO check for null
 
         while (!Utils.in_range(key, node.identifier, successor.identifier, true)) {
 
             if (node.equals(info))
                 node = closestPrecedingNode(key);
             else
-                node = new ChordConnection(node.address).findClosest(key);
+                node = new ChordConnection(node.chordAddress).findClosest(key);
 
             if (node.equals(info))
                 successor = successor();
             else
-                successor = new ChordConnection(node.address).getSuccessor();
+                successor = new ChordConnection(node.chordAddress).getSuccessor();
         }
 
         return successor;
@@ -202,7 +173,7 @@ public final class ChordNode {
      * @param key Identifier
      * @return Closest preceding node of given key
      */
-    NodeInfo closestPrecedingNode(Integer key) {
+    public ChordInfo closestPrecedingNode(Integer key) {
 
         for (int i = Chord.m; i > 0; i--) {
 
@@ -211,7 +182,7 @@ public final class ChordNode {
 
             if (Utils.in_range(finger_table.get(i).identifier, info.identifier, key, false)) {
 
-                if (!new ChordConnection(finger_table.get(i).address).alive())
+                if (!finger_table.get(i).equals(info) && !new ChordConnection(finger_table.get(i).chordAddress).alive())
                     clearNode(finger_table.get(i));
                 else
                     return finger_table.get(i);
@@ -222,18 +193,29 @@ public final class ChordNode {
     }
 
     /**
+     * Checks if given node is predecessor
+     * @param node Possible predecessor node
+     */
+    public void notify(ChordInfo node) {
+
+        if (predecessor == null || Utils.in_range(node.identifier, predecessor.identifier, info.identifier, false)) {
+            predecessor = node;
+            Logger.fine("Chord", "updated predecessor");
+        }
+    }
+
+    /**
      * Checks if predecessor is alive
      */
     private void checkPredecessor() {
 
-        if (predecessor() != null && !predecessor().equals(info) && !new ChordConnection(predecessor().address).alive()) {
-
+        if (predecessor != null && !predecessor.equals(info) && !new ChordConnection(predecessor.chordAddress).alive()) {
             clearNode(predecessor);
 
-            if (Chord.supernode.equals(info.address))
+            if (Chord.supernode.equals(info.chordAddress))
                 predecessor = info;
             else
-                predecessor(null);
+                predecessor = null;
 
             Logger.fine("Chord", "predecessor not alive, updating");
         }
@@ -250,22 +232,25 @@ public final class ChordNode {
      */
     private void stabilize() {
 
-        NodeInfo node = info;
+        ChordInfo node = info;
 
         for (int i = 1; i <= Chord.r; i++){
 
-            NodeInfo p;
+            ChordInfo p;
 
             if (successors.get(i).equals(info))
-                p = predecessor();
+                p = predecessor;
             else
-                p = new ChordConnection(successors.get(i).address).getPredecessor();
+                p = new ChordConnection(successors.get(i).chordAddress).getPredecessor();
 
             if (p == null) {
-                if (Chord.supernode.equals(info.address))
+                if (Chord.supernode.equals(info.chordAddress))
                     successors.put(i, findSuccessor(node.identifier));
                 else
                     successors.put(i, new ChordConnection(Chord.supernode).findSuccessor(node.identifier));
+
+                successors.computeIfAbsent(i, k -> info);
+
             } else if (Utils.in_range(p.identifier, node.identifier, successors.get(i).identifier, false)) {
                 successors.put(i, p);
             }
@@ -273,30 +258,20 @@ public final class ChordNode {
             node = successors.get(i);
         }
 
-        System.out.println(ChordNode.instance());
+//        System.out.println(ChordNode.instance());
 
         if (successor().equals(info))
             notify(info);
         else
-            new ChordConnection(successor().address).notify(info);
+            new ChordConnection(successor().chordAddress).notify(info);
+
+        Logger.fine("Chord", "stabilized node");
 
         Chord.executor.schedule(
                 this::stabilize,
-                2,
-                TimeUnit.SECONDS
+                200,
+                TimeUnit.MILLISECONDS
         );
-    }
-
-    /**
-     * Checks if given node is predecessor
-     * @param node Possible predecessor node
-     */
-    void notify(NodeInfo node) {
-
-        if (predecessor == null || Utils.in_range(node.identifier, predecessor.identifier, info.identifier, false)) {
-            predecessor(node);
-            Logger.fine("Chord", "updated predecessor");
-        }
     }
 
     /**
@@ -312,61 +287,98 @@ public final class ChordNode {
 
         Chord.executor.schedule(
                 () -> fixFinger(i % Chord.m + 1),
-                2,
-                TimeUnit.SECONDS
+                200,
+                TimeUnit.MILLISECONDS
         );
     }
 
-    private void clearNode(NodeInfo node) {
+    private void clearNode(ChordInfo node) {
 
-        for (Map.Entry<Integer, NodeInfo> finger : finger_table.entrySet()) {
+        for (Map.Entry<Integer, ChordInfo> finger : finger_table.entrySet()) {
             if (finger.getValue().equals(node))
                 finger_table.remove(finger.getKey());
         }
 
-        for (Map.Entry<Integer, NodeInfo> successor : successors.entrySet()) {
+        for (Map.Entry<Integer, ChordInfo> successor : successors.entrySet()) {
             if (successor.getValue().equals(node))
                 successor.setValue(info);
         }
     }
 
     /**
-     * Get node's successor
-     * @return Node's successor
+     * Initializes super node
      */
-    NodeInfo successor() {
-        for (NodeInfo successor : successors.values()) {
-            if (!new ChordConnection(successor.address).alive())
-                clearNode(successor);
-            else
-                return successor;
+    @Override
+    public void createSuperNode() {
+
+        init(Chord.supernode);
+
+        finger_table.put(1, info);
+
+        initThreads();
+
+        Logger.info("Chord", "starting super node " + info.identifier + " at " + info.chordAddress);
+    }
+
+    /**
+     * Initializes node
+     * @param addr Address
+     */
+    @Override
+    public void createNode(InetSocketAddress addr) {
+
+        init(addr);
+
+        if (!new ChordConnection(Chord.supernode).alive()) {
+            Logger.info("Chord", "super node is not alive");
+            return;
         }
 
-        return info;
+        finger_table.put(1, new ChordConnection(Chord.supernode).findSuccessor(info.identifier));
+
+        initThreads();
+
+        Logger.info("Chord", "starting node " + info.identifier + " at " + info.chordAddress);
     }
 
-    /**
-     * Get node's predecessor
-     * @return Node's predecessor
-     */
-    NodeInfo predecessor() {
-        return predecessor;
+    @Override
+    public Integer id() {
+        return info.identifier;
     }
 
-    /**
-     * Set node's successor
-     * @param node New node's successor
-     */
-    private void successor(NodeInfo node) {
-        finger_table.put(1, node);
+    @Override
+    public void put(String fileID, Integer chunkNo, byte[] chunk)  {
+        ChordInfo responsibleNode = findSuccessor(Chord.hashToKey(fileID + chunkNo));
+
+        Boolean status = new ProtocolConnection(responsibleNode.protocolAddress).backupChunk(fileID, chunkNo, chunk);
+
+        // TODO Error
+        if (status == null) {
+            System.out.println("Error in connection");
+        } else if (status) {
+            Store.registerChunk(fileID, chunkNo, responsibleNode.identifier);
+            Logger.fine("Chord", "node " + responsibleNode.identifier + " confirmed store " +
+                    "for chunk #" + chunkNo + " from file " + fileID);
+        } else {
+            System.out.println("ERROR");
+        }
     }
 
-    /**
-     * Set node's predecessor
-     * @param node New node's predecessor
-     */
-    private void predecessor(NodeInfo node) {
-        predecessor = node;
+    @Override
+    public byte[] get(String fileID, Integer chunkNo) {
+        ChordInfo responsibleNode = findSuccessor(Chord.hashToKey(fileID + chunkNo));
+
+        byte[] chunk = new ProtocolConnection(responsibleNode.protocolAddress).restoreChunk(fileID, chunkNo);
+
+        if (chunk == null) {
+            System.out.println("Error in connection");
+        } else {
+            Logger.fine("Chord", "recovered chunk #" + chunkNo + " from file " + fileID +
+                    " from node " + responsibleNode.identifier);
+
+        }
+
+        return chunk;
     }
 
     @Override
@@ -379,7 +391,7 @@ public final class ChordNode {
         sb.append("Node ")
                 .append(info.identifier)
                 .append(" at ")
-                .append(info.address)
+                .append(info.chordAddress)
                 .append("\nPredecessor: ")
                 .append(predecessor)
                 .append('\n');
@@ -403,21 +415,19 @@ public final class ChordNode {
         return sb.toString();
     }
 
-    public static void main(String[] args) {
-        String sslDir = "/home/miguelalexbt/IdeaProjects/SDIS_PROJ2/src/ssl/";
-
-        System.setProperty("javax.net.ssl.keyStore", sslDir + "keystore.keys");
-        System.setProperty("javax.net.ssl.keyStorePassword", "123456");
-
-        System.setProperty("javax.net.ssl.trustStore", sslDir + "truststore");
-        System.setProperty("javax.net.ssl.trustStorePassword", "123456");
-
-        if (args[0].equals("SUPER")) {
-            ChordNode.instance().initSuperNode();
-        } else if (args[0].equals("DEBUG")) {
-            new ChordConnection(new InetSocketAddress(args[1], Integer.parseInt(args[2]))).debug();
-        } else {
-            ChordNode.instance().initNode(new InetSocketAddress(args[0], Integer.parseInt(args[1])));
-        }
-    }
+//    public static void main(String[] args) {
+//        String sslDir = "/home/miguelalexbt/IdeaProjects/SDIS_PROJ2/src/ssl/";
+//
+//        System.setProperty("javax.net.ssl.keyStore", sslDir + "keystore.keys");
+//        System.setProperty("javax.net.ssl.keyStorePassword", "123456");
+//
+//        System.setProperty("javax.net.ssl.trustStore", sslDir + "truststore");
+//        System.setProperty("javax.net.ssl.trustStorePassword", "123456");
+//
+//        if (args[0].equals("SUPER")) {
+//            ChordNode.instance().createSuperNode();
+//        } else {
+//            ChordNode.instance().createNode(new InetSocketAddress(args[0], Integer.parseInt(args[1])));
+//        }
+//    }
 }

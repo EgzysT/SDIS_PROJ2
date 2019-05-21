@@ -1,33 +1,32 @@
-package chord;
+package core;
 
-import core.Message;
+import chord.ChordInfo;
 
-public class ChordMessage extends Message {
+class ChordMessage extends Message {
 
-    enum MessageType {
+    enum Type {
         CLOSEST_PRECEDING_NODE,
         FIND_SUCCESSOR, NOTIFY,
         GET_SUCCESSOR, GET_PREDECESSOR,
-        ALIVE, NODE, DEBUG
+        NODE, ALIVE
     }
 
-    MessageType type;
+    Type type;
     Integer key;
-    NodeInfo node;
+    ChordInfo node;
 
-    ChordMessage() {}
+    ChordMessage(Type type) {
+        this.type = type;
+    }
 
-    ChordMessage(Integer key) {
+    ChordMessage(Type type, Integer key) {
+        this.type = type;
         this.key = key;
     }
 
-    ChordMessage(NodeInfo node) {
-        this.node = node;
-    }
-
-    ChordMessage type(MessageType type) {
+    ChordMessage(Type type, ChordInfo node) {
         this.type = type;
-        return this;
+        this.node = node;
     }
 
     @Override
@@ -39,7 +38,7 @@ public class ChordMessage extends Message {
         if (key != null)
             sb.append(key);
         if (node != null)
-            sb.append(node.address);
+            sb.append(node.chordAddress);
 
         return sb.toString();
     }

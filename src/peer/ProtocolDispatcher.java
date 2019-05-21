@@ -23,7 +23,7 @@
 //
 //    @Override
 //    protected void awaitConnection() throws IOException {
-//        ChordConnection connection = new ChordConnection(server.accept());
-//        executor.submit(new ChordWorker(connection));
+//        ChordConnection core = new ChordConnection(server.accept());
+//        executor.submit(new ChordWorker(core));
 //    }
 //}

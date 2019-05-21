@@ -1,6 +1,5 @@
 package utils;
 
-import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,27 +11,22 @@ public final class Utils {
 
     private Utils() {}
 
-    public static BigInteger hash(String toHash) {
+    public static String generateChordID(String address) {
 
-        BigInteger result = null;
+        StringBuilder hexString = new StringBuilder();
 
         try {
-            byte[] hash = MessageDigest.getInstance("SHA-1").digest(toHash.getBytes());
-
-            StringBuilder hexString = new StringBuilder();
+            byte[] hash = MessageDigest.getInstance("SHA-1").digest(address.getBytes());
 
             for (byte b : hash) {
                 hexString.append(Integer.toHexString(0xFF & b));
             }
-
-            result = new BigInteger(hexString.toString(), 16);
-
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
             System.exit(-1);
         }
 
-        return result;
+        return hexString.toString();
     }
 
     public static String generateFileID(String filePath) {

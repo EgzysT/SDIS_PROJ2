@@ -1,7 +1,9 @@
 package core;
 
+import ssl.SocketFactory;
 import utils.Logger;
 
+import javax.net.ssl.SSLServerSocket;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -14,8 +16,15 @@ public abstract class Dispatcher implements Runnable {
     /** Dispatcher's executor, shared with all dispatchers */
     protected static ThreadPoolExecutor executor;
 
+    /** Server socket */
+    protected SSLServerSocket server;
+
     static {
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
+    }
+
+    public Dispatcher(Integer port) throws IOException {
+        server = SocketFactory.getServerSocket(port);
     }
 
     @Override
@@ -30,7 +39,7 @@ public abstract class Dispatcher implements Runnable {
     }
 
     /**
-     * Handles incoming connection
+     * Handles incoming core
      * @throws IOException
      */
     protected abstract void awaitConnection() throws IOException;

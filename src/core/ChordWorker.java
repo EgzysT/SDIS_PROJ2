@@ -1,6 +1,7 @@
-package chord;
+package core;
 
-import core.Worker;
+import chord.ChordNode;
+import utils.Logger;
 
 /**
  * Chord's worker
@@ -12,7 +13,7 @@ class ChordWorker extends Worker {
 
     /**
      * Creates a new chord's worker
-     * @param connection Connection
+     * @param connection core
      */
     ChordWorker(ChordConnection connection) {
         this.connection = connection;
@@ -44,14 +45,10 @@ class ChordWorker extends Worker {
             case NOTIFY:
                 ChordNode.instance().notify(request.node);
                 break;
-            case DEBUG:
-                System.out.println("\n--- DEBUG ---");
-                System.out.println(ChordNode.instance());
-                System.out.println("-------------\n");
-                break;
             case ALIVE:
-            case NODE:
                 break;
+            default:
+                Logger.severe("Chord", "invalid request received");
         }
     }
 }

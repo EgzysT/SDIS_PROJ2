@@ -1,27 +1,27 @@
-package chord;
+package core;
 
-import core.Dispatcher;
-import ssl.SocketFactory;
+import chord.ChordNode;
+import utils.Logger;
 
-import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLSocket;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 
 /**
  * Chord's dispatcher
  */
 public class ChordDispatcher extends Dispatcher {
 
-    /** Server socket */
-    private SSLServerSocket server;
-
     /**
      * Creates a new chord's dispatcher
      * @param port Port
      * @throws IOException
      */
-    ChordDispatcher(Integer port) throws IOException {
-        server = SocketFactory.getServerSocket(port);
+    public ChordDispatcher(Integer port) throws IOException {
+        super(port);
+        ChordNode.instance().info.chordAddress = new InetSocketAddress(server.getInetAddress(), server.getLocalPort());
+
+        Logger.info("Dispatcher", "started chord dispatcher at " + server.getLocalPort());
     }
 
     @Override

@@ -1,5 +1,6 @@
 package chord;
 
+import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -7,7 +8,7 @@ import java.util.concurrent.ScheduledExecutorService;
 /**
     Chord settings
  */
-class Chord {
+public class Chord {
 
     /** Identifier space's bits (up to 2^m nodes) */
     static Integer m;
@@ -23,10 +24,14 @@ class Chord {
 
     static {
         m = 4;
-        r = 3;
+        r = 4;
         supernode = new InetSocketAddress("localhost", 8000);
-        executor = Executors.newScheduledThreadPool(2);
+        executor = Executors.newScheduledThreadPool(4);
     }
 
     private Chord() {}
+
+    public static Integer hashToKey(String hash) {
+        return new BigInteger(hash, 16).mod(new BigInteger("2").pow(m)).intValue();
+    }
 }

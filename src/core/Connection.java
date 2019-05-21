@@ -13,7 +13,7 @@ import java.net.InetSocketAddress;
 */
 public abstract class Connection {
 
-    /** Connection' socket */
+    /** Connection's socket */
     protected SSLSocket client;
     protected Boolean alive;
 
@@ -46,6 +46,10 @@ public abstract class Connection {
      * @throws IOException
      */
     protected void send(Message message) throws IOException {
+
+        if (client == null)
+            throw new IOException();
+
         ObjectOutputStream os = new ObjectOutputStream(client.getOutputStream());
         os.writeObject(message);
         os.flush();
@@ -57,6 +61,10 @@ public abstract class Connection {
      * @throws IOException
      */
     protected Message receive() throws IOException {
+
+        if (client == null)
+            throw new IOException();
+
         Message message = null;
 
         try {
