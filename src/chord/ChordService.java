@@ -3,15 +3,25 @@ package chord;
 import java.net.InetSocketAddress;
 
 /**
- * Chord's interface for peer
+ * ChordHandler's interface for peer
  */
 public interface ChordService {
 
+    /**
+     * Creates a super node
+     */
     void createSuperNode();
 
+    /**
+     * Creates a node
+     * @param addr Address
+     */
     void createNode(InetSocketAddress addr);
 
-
+    /**
+     * Returns node's identifier
+     * @return Node's identifier
+     */
     Integer id();
 
     /**

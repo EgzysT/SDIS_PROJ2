@@ -8,16 +8,6 @@ import java.rmi.NotBoundException;
 
 public class TestApp {
 
-    public static void main(String[] args) {
-
-        if (args.length < 2) {
-            System.out.println("Usage: java client.TestApp <accessPoint> <protocol> <filePath>");
-            return;
-        }
-
-        new TestApp().processRequest(args[0], args[1], args[2]);
-    }
-
     private void processRequest(String accessPoint, String protocol, String filePath) {
 
         try {
@@ -43,5 +33,15 @@ public class TestApp {
             e.printStackTrace();
             System.exit(-1);
         }
+    }
+
+    public static void main(String[] args) {
+
+        if (args.length < 2) {
+            System.out.println("Usage: java client.TestApp <accessPoint> <protocol> <filePath>");
+            return;
+        }
+
+        new TestApp().processRequest(args[0], args[1], args[2]);
     }
 }

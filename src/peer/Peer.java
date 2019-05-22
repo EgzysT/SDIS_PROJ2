@@ -7,6 +7,7 @@ import protocol.ProtocolHandler;
 import protocol.Restore;
 
 import java.io.File;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -120,6 +121,8 @@ public class Peer extends UnicastRemoteObject implements PeerService {
 
         // For node:
         // java peer.Peer false peerY YYY.Y.Y.Y:YYY
+
+        System.out.println(InetAddress.getLocalHost());
 
         Peer.instance().start(Boolean.parseBoolean(args[0]), args[1], args[2]);
     }

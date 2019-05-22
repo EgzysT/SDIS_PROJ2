@@ -6,7 +6,7 @@ import common.Worker;
 import utils.Logger;
 
 /**
- * Chord's worker
+ * ChordHandler's worker
  */
 class ChordWorker extends Worker {
 
@@ -53,7 +53,7 @@ class ChordWorker extends Worker {
             case ALIVE:
                 break;
             default:
-                Logger.severe("Chord", "invalid request received");
+                Logger.severe("ChordHandler", "invalid request received");
         }
     }
 }

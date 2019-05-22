@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 /**
- * Chord's dispatcher
+ * ChordHandler's dispatcher
  */
 public class ChordDispatcher extends Dispatcher {
 

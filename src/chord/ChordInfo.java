@@ -11,7 +11,7 @@ public class ChordInfo implements Serializable {
     /** Identifier */
     public Integer identifier;
 
-    /** Chord's address */
+    /** ChordHandler's address */
     public InetSocketAddress chordAddress;
 
     /** Protocol's address */
@@ -20,7 +20,7 @@ public class ChordInfo implements Serializable {
     /**
      * Creates a new node's info
      * @param id Identifier
-     * @param chordAddr Chord's address
+     * @param chordAddr ChordHandler's address
      * @param protocolAddr Protocol's address
      */
     ChordInfo(Integer id, InetSocketAddress chordAddr, InetSocketAddress protocolAddr) {

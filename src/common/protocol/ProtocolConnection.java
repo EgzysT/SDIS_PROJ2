@@ -88,7 +88,7 @@ public class ProtocolConnection extends Connection {
         try {
             message = (ProtocolMessage) receive();
         } catch (IOException e) {
-            Logger.warning("Chord", "failed to listen to request");
+            Logger.warning("ChordHandler", "failed to listen to request");
         }
 
         return message;
@@ -109,7 +109,7 @@ public class ProtocolConnection extends Connection {
                 send(new ProtocolMessage(NACK));
             client.close();
         } catch (IOException e) {
-            Logger.warning("Chord", "failed to reply to request");
+            Logger.warning("ChordHandler", "failed to reply to request");
         }
     }
 
@@ -125,7 +125,7 @@ public class ProtocolConnection extends Connection {
                 send(new ProtocolMessage(NACK));
             client.close();
         } catch (IOException e) {
-            Logger.warning("Chord", "failed to reply to request");
+            Logger.warning("ChordHandler", "failed to reply to request");
         }
     }
 }
