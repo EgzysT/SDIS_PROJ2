@@ -47,6 +47,9 @@ public class ProtocolWorker extends Worker {
                     connection.reply(false);
                 break;
             case DELETE:
+                if (!deleteChunk(request.fileID, request.chunkNo))
+                    connection.reply(false);
+                break;
             default:
                 Logger.severe("Protocol", "invalid request received");
         }
@@ -173,6 +176,27 @@ public class ProtocolWorker extends Worker {
             System.exit(-1);
         }
 
+        return true;
+    }
+
+    /**
+     * Deletes chunk
+     * TODO: possibly return the chunk that was stored.
+     * @param fileID
+     * @param chunkNo
+     * @return true if found and deleted
+     */
+    private Boolean deleteChunk(String fileID, Integer chunkNo) {
+        if (!Store.hasChunk(fileID, chunkNo, ChordNode.instance().id())) {
+            Logger.fine("Store", "peer does not have chunk #" + chunkNo + " from file " + fileID + " stored");
+            return false;
+        }
+        Store.unregisterChunk(fileID, chunkNo, ChordNode.instance().id());
+
+        if (!Files.deleteIfExists(Paths.get(Peer.instance().backupDir + File.separator + fileID + File.separator + chunkNo + ".chunk"))){
+            Logger.fine("Store", "peer does not have chunk #" + chunkNo + " from file " + fileID + " on disk");
+            return false;
+        }
         return true;
     }
 }

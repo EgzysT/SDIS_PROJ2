@@ -53,24 +53,24 @@ public class Store {
         });
     }
 
-//    /**
-//     * Unregister chunk that was deleted by a peer.
-//     * @param fileID   File ID
-//     * @param chunkNo  Chunk number
-//     * @param id Peer that deleted chunk
-//     */
-//    static void unregisterChunk(String fileID, Integer chunkNo, Integer id) {
-//        chunks.computeIfPresent(fileID, (k1, v1) -> {
-//
-//            v1.computeIfPresent(chunkNo, (k2, v2) -> {
-//                v2.peers.remove(id);
-//
-//                return v2;
-//            });
-//
-//            return v1;
-//        });
-//    }
+   /**
+    * Unregister chunk that was deleted by a peer.
+    * @param fileID   File ID
+    * @param chunkNo  Chunk number
+    * @param id Peer that deleted chunk
+    */
+   public static void unregisterChunk(String fileID, Integer chunkNo, Integer id) {
+       chunks.computeIfPresent(fileID, (k1, v1) -> {
+
+           v1.computeIfPresent(chunkNo, (k2, v2) -> {
+               v2.peers.remove(id);
+
+               return v2;
+           });
+
+           return v1;
+       });
+   }
 
     // TODO
     // Peer backed up file

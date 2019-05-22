@@ -51,7 +51,7 @@ public class Restore {
             return;
 
         if (instances.putIfAbsent(fileID, true) != null) {
-            Logger.warning("Backup", "found another restore protocol instance for file " + fileID);
+            Logger.warning("Restore", "found another restore protocol instance for file " + fileID);
             return;
         }
 

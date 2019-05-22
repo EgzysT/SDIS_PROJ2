@@ -401,6 +401,24 @@ public final class ChordNode implements ChordService {
     }
 
     @Override
+    public void remove(String fileID, Integer chunkNo) {
+        ChordInfo responsibleNode = findSuccessor(Chord.hashToKey(fileID + chunkNo));
+
+        Boolean status = new ProtocolConnection(responsibleNode.protocolAddress).backupChunk(fileID, chunkNo, chunk);
+        if (status == null) {    
+            System.out.println("Error in connection");
+        }
+        else if (!status) {
+            System.out.println("ERROR");
+        }
+        else {
+            Store.unregisterChunk(fileID, chunkNo, responsibleNode.identifier);
+            Logger.fine("Chord", "node " + responsibleNode.identifier + " confirmed delete " +
+                    "for chunk #" + chunkNo + " from file " + fileID);
+        }
+    }
+
+    @Override
     public String toString() {
 
         Utils.clearScreen();

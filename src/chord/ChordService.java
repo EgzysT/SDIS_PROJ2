@@ -30,5 +30,12 @@ public interface ChordService {
      */
     byte[] get(String fileID, Integer chunkNo);
 
+    /**
+     * Removes a value from the DHT
+     * @param fileID File identifier
+     * @param chunkNo Chunk number
+     */
+    void remove(String fileID, Integer chunkNo);
+
 //    HashSet<InetSocketAddress> backupPeers(Integer key);
 }

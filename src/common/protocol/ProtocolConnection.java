@@ -57,19 +57,22 @@ public class ProtocolConnection extends Connection {
         return chunk;
     }
 
-//    public void deleteChunk(String fileID, Integer chunkNo) {
-//
-//        if (client == null)
-//            return;
-//
-//        try {
-//            send(new ProtocolMessage(ProtocolMessage.Type.DELETE, fileID, chunkNo));
-//            ProtocolMessage reply = (ProtocolMessage) receive();
-//            client.close();
-//        } catch(IOException e) {
-//            Logger.warning("idk", "pls3");
-//        }
-//    }
+   public Boolean deleteChunk(String fileID, Integer chunkNo) {
+
+       if (client == null)
+           return null;
+
+       try {
+           send(new ProtocolMessage(ProtocolMessage.Type.DELETE, fileID, chunkNo));
+           ProtocolMessage reply = (ProtocolMessage) receive();
+           client.close();
+           return true;
+       } catch(IOException e) {
+           Logger.warning("idk", "pls3");
+       }
+
+       return false;
+   }
 
     /**
      * Listen to requests
