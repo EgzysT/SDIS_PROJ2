@@ -30,6 +30,8 @@ public class TestApp {
                 case "RESTORE":
                     service.restore(filePath);
                     break;
+                case "DELETE":
+                    service.delete(filePath);
                 default:
                     System.out.println("Protocol not found.");
                     break;

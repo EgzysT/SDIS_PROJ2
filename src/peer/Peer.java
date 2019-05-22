@@ -2,6 +2,7 @@ package peer;
 
 import chord.ChordNode;
 import protocol.Backup;
+import protocol.Delete;
 import protocol.ProtocolHandler;
 import protocol.Restore;
 
@@ -92,10 +93,10 @@ public class Peer extends UnicastRemoteObject implements PeerService {
 
     @Override
     public void delete(String filePath) {
-//        ProtocolHandler.schedule(
-//                () -> Backup.backupFile(filePath),
-//                0
-//        );
+       ProtocolHandler.schedule(
+               () -> Delete.deleteFile(filePath),
+               0
+       );
     }
 
     public static void main(String[] args) throws Exception {
