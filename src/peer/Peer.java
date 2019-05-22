@@ -101,7 +101,7 @@ public class Peer extends UnicastRemoteObject implements PeerService {
 
     public static void main(String[] args) throws Exception {
 
-        String sslDir = "/home/miguelalexbt/IdeaProjects/SDIS_PROJ2/src/ssl/";
+        String sslDir = "C:\\Users\\ricar\\Desktop\\SDIS\\Proj2\\src\\ssl\\";
 
         System.setProperty("javax.net.ssl.keyStore", sslDir + "keystore.keys");
         System.setProperty("javax.net.ssl.keyStorePassword", "123456");

@@ -404,7 +404,7 @@ public final class ChordNode implements ChordService {
     public void remove(String fileID, Integer chunkNo) {
         ChordInfo responsibleNode = findSuccessor(Chord.hashToKey(fileID + chunkNo));
 
-        Boolean status = new ProtocolConnection(responsibleNode.protocolAddress).backupChunk(fileID, chunkNo, chunk);
+        Boolean status = new ProtocolConnection(responsibleNode.protocolAddress).deleteChunk(fileID, chunkNo);
         if (status == null) {    
             System.out.println("Error in connection");
         }

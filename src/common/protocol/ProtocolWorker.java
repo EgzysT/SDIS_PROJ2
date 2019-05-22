@@ -193,9 +193,14 @@ public class ProtocolWorker extends Worker {
         }
         Store.unregisterChunk(fileID, chunkNo, ChordNode.instance().id());
 
-        if (!Files.deleteIfExists(Paths.get(Peer.instance().backupDir + File.separator + fileID + File.separator + chunkNo + ".chunk"))){
-            Logger.fine("Store", "peer does not have chunk #" + chunkNo + " from file " + fileID + " on disk");
-            return false;
+        try {
+            if (!Files.deleteIfExists(Paths.get(Peer.instance().backupDir + File.separator + fileID + File.separator + chunkNo + ".chunk"))){
+                Logger.fine("Store", "peer does not have chunk #" + chunkNo + " from file " + fileID + " on disk");
+                return false;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
         }
         return true;
     }

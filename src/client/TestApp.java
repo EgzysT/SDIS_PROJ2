@@ -32,6 +32,7 @@ public class TestApp {
                     break;
                 case "DELETE":
                     service.delete(filePath);
+                    break;
                 default:
                     System.out.println("Protocol not found.");
                     break;

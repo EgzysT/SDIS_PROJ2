@@ -29,10 +29,10 @@ public interface PeerService extends Remote {
      */
     void delete(String filePath) throws RemoteException;
 
-    /**
-     * sets a maxSize for the memory this program will use. If smaller it might delete chunks from other computers.
-     * @param maxSize
-     * @throws RemoteException
-     */
-    void reclaim(int maxSize) throws RemoteException;
+    // /**
+    //  * sets a maxSize for the memory this program will use. If smaller it might delete chunks from other computers.
+    //  * @param maxSize
+    //  * @throws RemoteException
+    //  */
+    // void reclaim(int maxSize) throws RemoteException;
 }
