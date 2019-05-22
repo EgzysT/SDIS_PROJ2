@@ -423,7 +423,7 @@ public class ChordNode implements ChordService {
 
     @Override
     public void remove(String fileID, Integer chunkNo) {
-        ChordInfo responsibleNode = findSuccessor(Chord.hashToKey(fileID + chunkNo));
+        ChordInfo responsibleNode = findSuccessor(ChordHandler.hashToKey(fileID + chunkNo));
 
         Boolean status = new ProtocolConnection(responsibleNode.protocolAddress).deleteChunk(fileID, chunkNo);
         if (status == null) {    
