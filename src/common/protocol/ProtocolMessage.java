@@ -1,4 +1,6 @@
-package core;
+package common.protocol;
+
+import common.Message;
 
 class ProtocolMessage extends Message {
 

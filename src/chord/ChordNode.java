@@ -1,9 +1,9 @@
 package chord;
 
-import core.ChordConnection;
-import core.ChordDispatcher;
-import core.ProtocolConnection;
-import core.ProtocolDispatcher;
+import common.chord.ChordConnection;
+import common.chord.ChordDispatcher;
+import common.protocol.ProtocolConnection;
+import common.protocol.ProtocolDispatcher;
 import store.Store;
 import utils.Logger;
 import utils.Utils;
@@ -65,11 +65,7 @@ public final class ChordNode implements ChordService {
 
         finger_table = new ConcurrentHashMap<>();
 
-        successors = new ConcurrentHashMap<Integer, ChordInfo>() {{
-            for (int i = 1; i <= Chord.r; i++) {
-                put(i, info);
-            }
-        }};
+        successors = new ConcurrentHashMap<>();
 
         predecessor = null;
     }
@@ -132,12 +128,21 @@ public final class ChordNode implements ChordService {
         return info;
     }
 
+    public List<ChordInfo> successors() {
+        return new ArrayList<>(successors.values());
+    }
+
     /**
      * Get node's predecessor
      * @return Node's predecessor
      */
     public ChordInfo predecessor() {
         return predecessor;
+    }
+
+    void successor(ChordInfo node) {
+        finger_table.put(1, node);
+        successors.put(1, node);
     }
 
     /**
@@ -149,8 +154,6 @@ public final class ChordNode implements ChordService {
 
         ChordInfo node = info;
         ChordInfo successor = successor();
-
-        // TODO check for null
 
         while (!Utils.in_range(key, node.identifier, successor.identifier, true)) {
 
@@ -189,6 +192,20 @@ public final class ChordNode implements ChordService {
             }
         }
 
+        for (int i = Chord.r; i > 0; i--) {
+
+            if (successors.get(i) == null)
+                continue;
+
+            if (Utils.in_range(successors.get(i).identifier, info.identifier, key, false)) {
+
+                if (!successors.get(i).equals(info) && !new ChordConnection(successors.get(i).chordAddress).alive())
+                    clearNode(successors.get(i));
+                else
+                    return successors.get(i);
+            }
+        }
+
         return info;
     }
 
@@ -222,8 +239,8 @@ public final class ChordNode implements ChordService {
 
         Chord.executor.schedule(
             this::checkPredecessor,
-            2,
-            TimeUnit.SECONDS
+            200,
+            TimeUnit.MILLISECONDS
         );
     }
 
@@ -232,38 +249,41 @@ public final class ChordNode implements ChordService {
      */
     private void stabilize() {
 
-        ChordInfo node = info;
+        ChordInfo pred;
 
-        for (int i = 1; i <= Chord.r; i++){
+        if (successor().equals(info))
+            pred = predecessor;
+        else
+            pred = new ChordConnection(successor().chordAddress).getPredecessor();
 
-            ChordInfo p;
-
-            if (successors.get(i).equals(info))
-                p = predecessor;
+        if (pred == null) {
+            if (Chord.supernode.equals(info.chordAddress))
+                successor(findSuccessor(info.identifier));
             else
-                p = new ChordConnection(successors.get(i).chordAddress).getPredecessor();
+                successor(new ChordConnection(Chord.supernode).findSuccessor(info.identifier));
 
-            if (p == null) {
-                if (Chord.supernode.equals(info.chordAddress))
-                    successors.put(i, findSuccessor(node.identifier));
-                else
-                    successors.put(i, new ChordConnection(Chord.supernode).findSuccessor(node.identifier));
+            if (finger_table.get(1) == null)
+                successor(info);
 
-                successors.computeIfAbsent(i, k -> info);
-
-            } else if (Utils.in_range(p.identifier, node.identifier, successors.get(i).identifier, false)) {
-                successors.put(i, p);
-            }
-
-            node = successors.get(i);
+        } else if (Utils.in_range(pred.identifier, info.identifier, successor().identifier, false)) {
+            successor(pred);
         }
-
-//        System.out.println(ChordNode.instance());
 
         if (successor().equals(info))
             notify(info);
         else
             new ChordConnection(successor().chordAddress).notify(info);
+
+        List<ChordInfo> succ;
+
+        if (successor().equals(info))
+            succ = new ArrayList<>(successors.values());
+        else
+            succ = new ChordConnection(successor().chordAddress).getSuccessors();
+
+        for (int i = 2; i < succ.size() + 2; i++) {
+            successors.put(i, succ.get(i - 2));
+        }
 
         Logger.fine("Chord", "stabilized node");
 
@@ -301,7 +321,7 @@ public final class ChordNode implements ChordService {
 
         for (Map.Entry<Integer, ChordInfo> successor : successors.entrySet()) {
             if (successor.getValue().equals(node))
-                successor.setValue(info);
+                successors.remove(successor.getKey());
         }
     }
 
@@ -313,7 +333,7 @@ public final class ChordNode implements ChordService {
 
         init(Chord.supernode);
 
-        finger_table.put(1, info);
+        successor(info);
 
         initThreads();
 
@@ -334,7 +354,7 @@ public final class ChordNode implements ChordService {
             return;
         }
 
-        finger_table.put(1, new ChordConnection(Chord.supernode).findSuccessor(info.identifier));
+        successor(new ChordConnection(Chord.supernode).findSuccessor(info.identifier));
 
         initThreads();
 
@@ -375,7 +395,6 @@ public final class ChordNode implements ChordService {
         } else {
             Logger.fine("Chord", "recovered chunk #" + chunkNo + " from file " + fileID +
                     " from node " + responsibleNode.identifier);
-
         }
 
         return chunk;
@@ -414,20 +433,4 @@ public final class ChordNode implements ChordService {
 
         return sb.toString();
     }
-
-//    public static void main(String[] args) {
-//        String sslDir = "/home/miguelalexbt/IdeaProjects/SDIS_PROJ2/src/ssl/";
-//
-//        System.setProperty("javax.net.ssl.keyStore", sslDir + "keystore.keys");
-//        System.setProperty("javax.net.ssl.keyStorePassword", "123456");
-//
-//        System.setProperty("javax.net.ssl.trustStore", sslDir + "truststore");
-//        System.setProperty("javax.net.ssl.trustStorePassword", "123456");
-//
-//        if (args[0].equals("SUPER")) {
-//            ChordNode.instance().createSuperNode();
-//        } else {
-//            ChordNode.instance().createNode(new InetSocketAddress(args[0], Integer.parseInt(args[1])));
-//        }
-//    }
 }

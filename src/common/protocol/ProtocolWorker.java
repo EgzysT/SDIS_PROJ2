@@ -1,6 +1,7 @@
-package core;
+package common.protocol;
 
 import chord.ChordNode;
+import common.Worker;
 import peer.Peer;
 import store.ChunkInfo;
 import store.Store;

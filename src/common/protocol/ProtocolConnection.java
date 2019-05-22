@@ -1,12 +1,13 @@
-package core;
+package common.protocol;
 
+import common.Connection;
 import utils.Logger;
 
 import javax.net.ssl.SSLSocket;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import static core.ProtocolMessage.Type.*;
+import static common.protocol.ProtocolMessage.Type.*;
 
 // TODO close socket in case of exception
 

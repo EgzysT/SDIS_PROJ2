@@ -1,4 +1,4 @@
-package core;
+package common;
 
 import ssl.SocketFactory;
 import utils.Logger;

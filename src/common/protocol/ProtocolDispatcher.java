@@ -1,6 +1,7 @@
-package core;
+package common.protocol;
 
 import chord.ChordNode;
+import common.Dispatcher;
 import utils.Logger;
 
 import javax.net.ssl.SSLSocket;

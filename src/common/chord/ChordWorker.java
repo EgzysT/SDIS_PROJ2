@@ -1,6 +1,8 @@
-package core;
+package common.chord;
 
+import chord.ChordInfo;
 import chord.ChordNode;
+import common.Worker;
 import utils.Logger;
 
 /**
@@ -25,7 +27,7 @@ class ChordWorker extends Worker {
         ChordMessage request = connection.listen();
 
         if (request == null) {
-            connection.reply(null);
+            connection.reply((ChordInfo) null);
             return;
         }
 
@@ -38,6 +40,9 @@ class ChordWorker extends Worker {
                 break;
             case GET_SUCCESSOR:
                 connection.reply(ChordNode.instance().successor());
+                break;
+            case GET_SUCCESSORS:
+                connection.reply(ChordNode.instance().successors());
                 break;
             case GET_PREDECESSOR:
                 connection.reply(ChordNode.instance().predecessor());

@@ -1,11 +1,14 @@
-package core;
+package common.chord;
 
 import chord.ChordInfo;
+import common.Connection;
 import utils.Logger;
 
 import javax.net.ssl.SSLSocket;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Chord's connection
@@ -96,6 +99,24 @@ public class ChordConnection extends Connection {
         return successor;
     }
 
+    public List<ChordInfo> getSuccessors() {
+
+        if (client == null)
+            return null;
+
+        List<ChordInfo> successors = null;
+
+        try {
+            send(new ChordMessage(ChordMessage.Type.GET_SUCCESSORS));
+            successors = ((ChordMessage) receive()).nodes;
+            client.close();
+        } catch (IOException e) {
+            Logger.warning("Chord", "failed to ask for successor");
+        }
+
+        return successors;
+    }
+
     /**
      * Requests node's predecessor
      * @return Node's predecessor
@@ -183,6 +204,19 @@ public class ChordConnection extends Connection {
 
         try {
             send(new ChordMessage(ChordMessage.Type.NODE, node));
+            client.close();
+        } catch (IOException e) {
+            Logger.warning("Chord", "failed to reply to request");
+        }
+    }
+
+    void reply(List<ChordInfo> nodes) {
+
+        if (client == null)
+            return;
+
+        try {
+            send(new ChordMessage(ChordMessage.Type.NODE, nodes));
             client.close();
         } catch (IOException e) {
             Logger.warning("Chord", "failed to reply to request");
