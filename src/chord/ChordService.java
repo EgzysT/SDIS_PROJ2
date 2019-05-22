@@ -9,15 +9,10 @@ import java.net.InetSocketAddress;
 public interface ChordService {
 
     /**
-     * Creates a super node
+     * Creates a new chord ring with a super node
+     * @param nodeAddr Node's address
      */
-    void createSuperNode();
-
-    /**
-     * Creates a node
-     * @param addr Address
-     */
-    void createNode(InetSocketAddress addr);
+    void join(InetSocketAddress nodeAddr);
 
     /**
      * Returns node's identifier
@@ -47,6 +42,4 @@ public interface ChordService {
      * @param chunkNo Chunk number
      */
     void remove(String fileID, Integer chunkNo);
-
-//    HashSet<InetSocketAddress> backupPeers(Integer key);
 }

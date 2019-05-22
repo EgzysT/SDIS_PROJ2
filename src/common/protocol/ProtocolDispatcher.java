@@ -6,7 +6,6 @@ import utils.Logger;
 
 import javax.net.ssl.SSLSocket;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 
 /**
  * Protocol dispatcher
@@ -20,7 +19,8 @@ public class ProtocolDispatcher extends Dispatcher {
      */
     public ProtocolDispatcher(Integer port) throws IOException {
         super(port);
-        ChordNode.instance().info.protocolAddress = new InetSocketAddress(server.getInetAddress(), server.getLocalPort());
+
+        ChordNode.instance().info.setProtocolPort(server.getLocalPort());
 
         Logger.info("Dispatcher", "started protocol dispatcher at " + server.getLocalPort());
     }

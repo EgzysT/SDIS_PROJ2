@@ -6,7 +6,6 @@ import utils.Logger;
 
 import javax.net.ssl.SSLSocket;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 
 /**
  * ChordHandler's dispatcher
@@ -20,13 +19,12 @@ public class ChordDispatcher extends Dispatcher {
      */
     public ChordDispatcher(Integer port) throws IOException {
         super(port);
-        ChordNode.instance().info.chordAddress = new InetSocketAddress(server.getInetAddress(), server.getLocalPort());
 
         Logger.info("Dispatcher", "started chord dispatcher at " + server.getLocalPort());
     }
 
     @Override
-    protected void awaitConnection() throws IOException {
+    public void awaitConnection() throws IOException {
         ChordConnection connection = new ChordConnection((SSLSocket) server.accept());
         executor.submit(new ChordWorker(connection));
     }

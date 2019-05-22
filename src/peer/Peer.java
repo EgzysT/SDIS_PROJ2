@@ -7,7 +7,6 @@ import protocol.ProtocolHandler;
 import protocol.Restore;
 
 import java.io.File;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,22 +42,9 @@ public class Peer extends UnicastRemoteObject implements PeerService {
         return instance;
     }
 
-    private void start(Boolean isSuper, String accessPoint, String host) {
+    private void start(String accessPoint, InetSocketAddress addr) {
 
-        try {
-            Naming.rebind(accessPoint, this);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(-1);
-        }
-
-        // Initiate chord node
-        if (isSuper) {
-            ChordNode.instance().createSuperNode();
-        } else {
-            String[] host_port = host.split(":");
-            ChordNode.instance().createNode(new InetSocketAddress(host_port[0], Integer.parseInt(host_port[1])));
-        }
+        ChordNode.instance().join(addr);
 
         homeDir = Paths.get(System.getProperty("user.home") + File.separator + "Desktop" +
                 File.separator + "peer" + ChordNode.instance().id() + File.separator
@@ -71,6 +57,13 @@ public class Peer extends UnicastRemoteObject implements PeerService {
             Files.createDirectories(backupDir);
             Files.createDirectories(restoreDir);
         } catch(Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
+        try {
+            Naming.rebind(accessPoint, this);
+        } catch (Exception e) {
             e.printStackTrace();
             System.exit(-1);
         }
@@ -110,23 +103,13 @@ public class Peer extends UnicastRemoteObject implements PeerService {
         System.setProperty("javax.net.ssl.trustStore", sslDir + "truststore");
         System.setProperty("javax.net.ssl.trustStorePassword", "123456");
 
-        // TODO change host:port to host, dynamically choose port
         if (args.length < 2) {
-            System.out.println("Usage: java peer.Peer <isSuper> <accessPoint> <host:port>");
+            System.out.println("Usage: java peer.Peer <accessPoint> <host:port>");
             System.exit(-1);
         }
 
-        // For super node:
-        // java peer.Peer true peerX XXX.X.X.X:XXXX
+        String[] tmp = args[1].split(":");
 
-        // For super node:
-        // java peer.Peer <accessPoint> <host> [superHost]
-
-        // For node:
-        // java peer.Peer false peerY YYY.Y.Y.Y:YYY
-
-        System.out.println(InetAddress.getLocalHost());
-
-        Peer.instance().start(Boolean.parseBoolean(args[0]), args[1], args[2]);
+        Peer.instance().start(args[0], new InetSocketAddress(tmp[0], Integer.parseInt(tmp[1])));
     }
 }

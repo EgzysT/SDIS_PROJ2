@@ -23,9 +23,9 @@ public class ChordHandler {
     static ScheduledExecutorService executor;
 
     static {
-        m = 4;
+        m = 10;
         r = 4;
-        supernode = new InetSocketAddress("localhost", 8000);
+        supernode = new InetSocketAddress("127.0.0.1", 8000);
         executor = Executors.newScheduledThreadPool(4);
     }
 

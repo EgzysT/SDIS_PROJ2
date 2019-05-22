@@ -12,7 +12,7 @@ public class ChordInfo implements Serializable {
     /** Identifier */
     public BigInteger identifier;
 
-    /** ChordHandler's address */
+    /** Chord's address */
     public InetSocketAddress chordAddress;
 
     /** Protocol's address */
@@ -21,7 +21,7 @@ public class ChordInfo implements Serializable {
     /**
      * Creates a new node's info
      * @param id Identifier
-     * @param chordAddr ChordHandler's address
+     * @param chordAddr Chord's address
      * @param protocolAddr Protocol's address
      */
     ChordInfo(BigInteger id, InetSocketAddress chordAddr, InetSocketAddress protocolAddr) {
@@ -30,8 +30,12 @@ public class ChordInfo implements Serializable {
         protocolAddress = protocolAddr;
     }
 
+    public void setProtocolPort(Integer port) {
+        protocolAddress = new InetSocketAddress(chordAddress.getHostName(), port);
+    }
+
     @Override
     public String toString() {
-        return identifier + " - " + chordAddress + " - " + protocolAddress;
+        return identifier + " - " + chordAddress.getAddress().getHostAddress() + ":" + chordAddress.getPort();
     }
 }
