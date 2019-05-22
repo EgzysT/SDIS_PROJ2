@@ -6,6 +6,7 @@ import utils.Logger;
 
 import javax.net.ssl.SSLSocket;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +37,7 @@ public class ChordConnection extends Connection {
      * @param key Identifier to search for
      * @return Closest node to given key
      */
-    public ChordInfo findClosest(Integer key) {
+    public ChordInfo findClosest(BigInteger key) {
 
         if (client == null)
             return null;
@@ -59,7 +60,7 @@ public class ChordConnection extends Connection {
      * @param key Identifier to search for
      * @return Successor node to given key
      */
-    public ChordInfo findSuccessor(Integer key) {
+    public ChordInfo findSuccessor(BigInteger key) {
 
         if (client == null)
             return null;

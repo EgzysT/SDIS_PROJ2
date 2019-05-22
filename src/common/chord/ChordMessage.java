@@ -3,6 +3,7 @@ package common.chord;
 import chord.ChordInfo;
 import common.Message;
 
+import java.math.BigInteger;
 import java.util.List;
 
 class ChordMessage extends Message {
@@ -15,7 +16,7 @@ class ChordMessage extends Message {
     }
 
     Type type;
-    Integer key;
+    BigInteger key;
     ChordInfo node;
     List<ChordInfo> nodes;
 
@@ -23,7 +24,7 @@ class ChordMessage extends Message {
         this.type = type;
     }
 
-    ChordMessage(Type type, Integer key) {
+    ChordMessage(Type type, BigInteger key) {
         this.type = type;
         this.key = key;
     }

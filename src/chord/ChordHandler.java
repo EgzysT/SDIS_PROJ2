@@ -36,7 +36,7 @@ public class ChordHandler {
      * @param hash Hash to use
      * @return Chord key associated with hash
      */
-    public static Integer hashToKey(String hash) {
-        return new BigInteger(hash, 16).mod(new BigInteger("2").pow(m)).intValue();
+    public static BigInteger hashToKey(String hash) {
+        return new BigInteger(hash, 16).mod(new BigInteger("2").pow(m));
     }
 }

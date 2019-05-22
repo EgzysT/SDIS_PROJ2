@@ -1,6 +1,7 @@
 package store;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.HashSet;
 
 /**
@@ -12,7 +13,7 @@ public class ChunkInfo implements Serializable {
     public Integer size;
 
     /** Peers that store this chunk */
-    public HashSet<Integer> peers;
+    public HashSet<BigInteger> peers;
 
     public ChunkInfo() {
         peers = new HashSet<>();

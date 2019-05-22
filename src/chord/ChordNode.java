@@ -9,6 +9,7 @@ import utils.Logger;
 import utils.Utils;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -159,12 +160,12 @@ public class ChordNode implements ChordService {
      * @param key Identifier
      * @return Successor of given key
      */
-    public ChordInfo findSuccessor(Integer key) {
+    public ChordInfo findSuccessor(BigInteger key) {
 
         ChordInfo node = info;
         ChordInfo successor = successor();
 
-        while (!Utils.in_range(key, node.identifier, successor.identifier, true)) {
+        while (!Utils.inRange(key, node.identifier, successor.identifier, true)) {
 
             if (node.equals(info))
                 node = closestPrecedingNode(key);
@@ -185,14 +186,14 @@ public class ChordNode implements ChordService {
      * @param key Identifier
      * @return Closest preceding node of given key
      */
-    public ChordInfo closestPrecedingNode(Integer key) {
+    public ChordInfo closestPrecedingNode(BigInteger key) {
 
         for (int i = ChordHandler.m; i > 0; i--) {
 
             if (finger_table.get(i) == null)
                 continue;
 
-            if (Utils.in_range(finger_table.get(i).identifier, info.identifier, key, false)) {
+            if (Utils.inRange(finger_table.get(i).identifier, info.identifier, key, false)) {
 
                 if (!finger_table.get(i).equals(info) && !new ChordConnection(finger_table.get(i).chordAddress).alive())
                     clearNode(finger_table.get(i));
@@ -206,7 +207,7 @@ public class ChordNode implements ChordService {
             if (successors.get(i) == null)
                 continue;
 
-            if (Utils.in_range(successors.get(i).identifier, info.identifier, key, false)) {
+            if (Utils.inRange(successors.get(i).identifier, info.identifier, key, false)) {
 
                 if (!successors.get(i).equals(info) && !new ChordConnection(successors.get(i).chordAddress).alive())
                     clearNode(successors.get(i));
@@ -224,7 +225,7 @@ public class ChordNode implements ChordService {
      */
     public void notify(ChordInfo node) {
 
-        if (predecessor == null || Utils.in_range(node.identifier, predecessor.identifier, info.identifier, false)) {
+        if (predecessor == null || Utils.inRange(node.identifier, predecessor.identifier, info.identifier, false)) {
             predecessor = node;
             Logger.fine("ChordHandler", "updated predecessor");
         }
@@ -248,7 +249,7 @@ public class ChordNode implements ChordService {
 
         ChordHandler.executor.schedule(
             this::checkPredecessor,
-            200,
+            500,
             TimeUnit.MILLISECONDS
         );
     }
@@ -274,7 +275,7 @@ public class ChordNode implements ChordService {
             if (finger_table.get(1) == null)
                 successor(info);
 
-        } else if (Utils.in_range(pred.identifier, info.identifier, successor().identifier, false)) {
+        } else if (Utils.inRange(pred.identifier, info.identifier, successor().identifier, false)) {
             successor(pred);
         }
 
@@ -291,8 +292,8 @@ public class ChordNode implements ChordService {
             succ = new ChordConnection(successor().chordAddress).getSuccessors();
 
         if (succ != null) {
-            for (int i = 2; i < succ.size() + 2; i++) {
-                successors.put(i, succ.get(i - 2));
+            for (int i = 0; i < succ.size(); i++) {
+                successors.put(i + 2, succ.get(i));
             }
         }
 
@@ -302,7 +303,7 @@ public class ChordNode implements ChordService {
 
         ChordHandler.executor.schedule(
                 this::stabilize,
-                200,
+                500,
                 TimeUnit.MILLISECONDS
         );
     }
@@ -313,7 +314,9 @@ public class ChordNode implements ChordService {
      */
     private void fixFinger(Integer i) {
 
-        Integer start = info.identifier + (int) Math.pow(2, i - 1);
+//        BigInteger start = new BigInteger(info.identifier + (int) Math.pow(2, i - 1));
+
+        BigInteger start = Utils.start(info.identifier, i);
 
         if (i.equals(1))
             successor(findSuccessor(start));
@@ -324,7 +327,7 @@ public class ChordNode implements ChordService {
 
         ChordHandler.executor.schedule(
                 () -> fixFinger(i % ChordHandler.m + 1),
-                200,
+                500,
                 TimeUnit.MILLISECONDS
         );
     }
@@ -383,7 +386,7 @@ public class ChordNode implements ChordService {
     }
 
     @Override
-    public Integer id() {
+    public BigInteger id() {
         return info.identifier;
     }
 

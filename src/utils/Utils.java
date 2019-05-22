@@ -1,5 +1,6 @@
 package utils;
 
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -52,18 +53,22 @@ public final class Utils {
         return hexString.toString();
     }
 
-    public static boolean in_range(Integer value, Integer lower, Integer upper, Boolean closed) {
+    public static BigInteger start(BigInteger n, Integer i) {
+        return n.add(new BigInteger("2").pow(i - 1));
+    }
 
-        if (lower < upper) {
+    public static Boolean inRange(BigInteger value, BigInteger lower, BigInteger upper, Boolean closed) {
+
+        if (lower.compareTo(upper) < 0) {
             if (closed)
-                return value > lower && value <= upper;
+                return value.compareTo(lower) > 0 && value.compareTo(upper) <= 0;
             else
-                return value > lower && value < upper;
+                return value.compareTo(lower) > 0 && value.compareTo(upper) < 0;
         } else {
             if (closed)
-                return value > lower || value <= upper;
+                return value.compareTo(lower) > 0 || value.compareTo(upper) <= 0;
             else
-                return value > lower || value < upper;
+                return value.compareTo(lower) > 0 || value.compareTo(upper) < 0;
         }
     }
 

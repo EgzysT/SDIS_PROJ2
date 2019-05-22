@@ -1,5 +1,6 @@
 package chord;
 
+import java.math.BigInteger;
 import java.net.InetSocketAddress;
 
 /**
@@ -22,7 +23,7 @@ public interface ChordService {
      * Returns node's identifier
      * @return Node's identifier
      */
-    Integer id();
+    BigInteger id();
 
     /**
      * Puts a value in the DHT

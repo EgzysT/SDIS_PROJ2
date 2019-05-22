@@ -3,6 +3,7 @@ package store;
 import chord.ChordNode;
 import peer.Peer;
 
+import java.math.BigInteger;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -35,7 +36,7 @@ public class Store {
      * @param chunkNo   Chunk number
      * @param nodeID    Node that stored chunk
      */
-    public static void registerChunk(String fileID, Integer chunkNo, Integer nodeID) {
+    public static void registerChunk(String fileID, Integer chunkNo, BigInteger nodeID) {
         chunks.compute(fileID, (k1, v1) -> {
             if (v1 == null)
                 v1 = new ConcurrentHashMap<>();
@@ -57,13 +58,13 @@ public class Store {
     * Unregister chunk that was deleted by a peer.
     * @param fileID   File ID
     * @param chunkNo  Chunk number
-    * @param id Peer that deleted chunk
+    * @param nodeID Peer that deleted chunk
     */
-   public static void unregisterChunk(String fileID, Integer chunkNo, Integer id) {
+   public static void unregisterChunk(String fileID, Integer chunkNo, BigInteger nodeID) {
        chunks.computeIfPresent(fileID, (k1, v1) -> {
 
            v1.computeIfPresent(chunkNo, (k2, v2) -> {
-               v2.peers.remove(id);
+               v2.peers.remove(nodeID);
 
                return v2;
            });
@@ -84,12 +85,12 @@ public class Store {
 
 
     // Peer has chunk stored
-    public static Boolean hasChunk(String fileID, Integer chunkNo, Integer peerID) {
+    public static Boolean hasChunk(String fileID, Integer chunkNo, BigInteger nodeID) {
 
         if (!chunks.containsKey(fileID) || !chunks.get(fileID).containsKey(chunkNo))
             return false;
 
-        return chunks.get(fileID).get(chunkNo).peers.contains(peerID);
+        return chunks.get(fileID).get(chunkNo).peers.contains(nodeID);
     }
 
     public static String getFile(String filePath) {

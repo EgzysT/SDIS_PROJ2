@@ -1,6 +1,7 @@
 package chord;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.net.InetSocketAddress;
 
 /**
@@ -9,7 +10,7 @@ import java.net.InetSocketAddress;
 public class ChordInfo implements Serializable {
 
     /** Identifier */
-    public Integer identifier;
+    public BigInteger identifier;
 
     /** ChordHandler's address */
     public InetSocketAddress chordAddress;
@@ -23,7 +24,7 @@ public class ChordInfo implements Serializable {
      * @param chordAddr ChordHandler's address
      * @param protocolAddr Protocol's address
      */
-    ChordInfo(Integer id, InetSocketAddress chordAddr, InetSocketAddress protocolAddr) {
+    ChordInfo(BigInteger id, InetSocketAddress chordAddr, InetSocketAddress protocolAddr) {
         identifier = id;
         chordAddress = chordAddr;
         protocolAddress = protocolAddr;
