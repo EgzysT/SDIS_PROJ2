@@ -38,6 +38,7 @@ public class Backup {
             return false;
         }
 
+        // TODO node may not have backed up file or chunk
         // Check if file is already backed up
         if (Store.isBackedUp(fileID)) {
             Logger.warning("Backup", "file " + fileID + " is already backed up");
@@ -112,7 +113,6 @@ public class Backup {
 
                     attachment.flip();
 
-                    // TODO later check for errors
                     ChordNode.instance().put(
                             fileID,
                             chunkNo,

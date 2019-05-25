@@ -161,20 +161,32 @@ public class ChordNode implements ChordService {
      */
     public ChordInfo findSuccessor(BigInteger key) {
 
-        ChordInfo node = info;
-        ChordInfo successor = successor();
+        ChordInfo node = info, successor = successor();
 
         while (!Utils.inRange(key, node.identifier, successor.identifier, true)) {
 
-            if (node.equals(info))
-                node = closestPrecedingNode(key);
-            else
-                node = new ChordConnection(node.chordAddress).findClosest(key);
+            ChordInfo nextNode, nextSuccessor;
 
             if (node.equals(info))
-                successor = successor();
+                nextNode = closestPrecedingNode(key);
             else
-                successor = new ChordConnection(node.chordAddress).getSuccessor();
+                nextNode = new ChordConnection(node.chordAddress).findClosest(key);
+
+            // If there was an error, ignore and try later
+            if (nextNode == null)
+                continue;
+
+            if (nextNode.equals(info))
+                nextSuccessor = successor();
+            else
+                nextSuccessor = new ChordConnection(nextNode.chordAddress).getSuccessor();
+
+            // If there was an error, ignore and try later
+            if (nextSuccessor == null)
+                continue;
+
+            node = nextNode;
+            successor = nextSuccessor;
         }
 
         return successor;
@@ -187,6 +199,7 @@ public class ChordNode implements ChordService {
      */
     public ChordInfo closestPrecedingNode(BigInteger key) {
 
+        // Search in finger table
         for (int i = ChordHandler.m; i > 0; i--) {
 
             if (finger_table.get(i) == null)
@@ -201,6 +214,7 @@ public class ChordNode implements ChordService {
             }
         }
 
+        // Search in successor list
         for (int i = ChordHandler.r; i > 0; i--) {
 
             if (successors.get(i) == null)
@@ -248,7 +262,7 @@ public class ChordNode implements ChordService {
 
         ChordHandler.executor.schedule(
             this::checkPredecessor,
-            500,
+            1000,
             TimeUnit.MILLISECONDS
         );
     }
@@ -265,14 +279,13 @@ public class ChordNode implements ChordService {
         else
             pred = new ChordConnection(successor().chordAddress).getPredecessor();
 
+        // If connection failed, ask super node
         if (pred == null) {
+
             if (ChordHandler.supernode.equals(info.chordAddress))
                 successor(findSuccessor(info.identifier));
             else
                 successor(new ChordConnection(ChordHandler.supernode).findSuccessor(info.identifier));
-
-            if (finger_table.get(1) == null)
-                successor(info);
 
         } else if (Utils.inRange(pred.identifier, info.identifier, successor().identifier, false)) {
             successor(pred);
@@ -298,11 +311,11 @@ public class ChordNode implements ChordService {
 
         System.out.println(ChordNode.instance());
 
-        Logger.fine("Chord", "stabilized node");
+//        Logger.fine("Chord", "stabilized node");
 
         ChordHandler.executor.schedule(
                 this::stabilize,
-                500,
+                1000,
                 TimeUnit.MILLISECONDS
         );
     }
@@ -313,8 +326,6 @@ public class ChordNode implements ChordService {
      */
     private void fixFinger(Integer i) {
 
-//        BigInteger start = new BigInteger(info.identifier + (int) Math.pow(2, i - 1));
-
         BigInteger start = Utils.start(info.identifier, i);
 
         if (i.equals(1))
@@ -322,11 +333,11 @@ public class ChordNode implements ChordService {
         else
             finger_table.put(i, findSuccessor(start));
 
-        Logger.fine("Chord", "updated finger " + i);
+//        Logger.fine("Chord", "updated finger " + i);
 
         ChordHandler.executor.schedule(
                 () -> fixFinger(i % ChordHandler.m + 1),
-                500,
+                1000,
                 TimeUnit.MILLISECONDS
         );
     }
@@ -337,11 +348,13 @@ public class ChordNode implements ChordService {
      */
     private void clearNode(ChordInfo node) {
 
+        // Clear from finger table
         for (Map.Entry<Integer, ChordInfo> finger : finger_table.entrySet()) {
             if (finger.getValue().equals(node))
                 finger_table.remove(finger.getKey());
         }
 
+        // Clear from successor list
         for (Map.Entry<Integer, ChordInfo> successor : successors.entrySet()) {
             if (successor.getValue().equals(node))
                 successors.remove(successor.getKey());
@@ -358,7 +371,6 @@ public class ChordNode implements ChordService {
             successor(info);
 
             Logger.info("Chord", "starting node " + info.identifier + " at " + info.chordAddress);
-
         } else {
 
             if (!new ChordConnection(ChordHandler.supernode).alive()) {
@@ -381,19 +393,27 @@ public class ChordNode implements ChordService {
 
     @Override
     public void put(String fileID, Integer chunkNo, byte[] chunk)  {
-        ChordInfo responsibleNode = findSuccessor(ChordHandler.hashToKey(fileID + chunkNo));
 
-        Boolean status = new ProtocolConnection(responsibleNode.protocolAddress).backupChunk(fileID, chunkNo, chunk);
+        // Find a node.
+        while (true) {
 
-        // TODO Error
-        if (status == null) {
-            System.out.println("Error in connection");
-        } else if (status) {
+            ChordInfo responsibleNode = findSuccessor(ChordHandler.hashToKey(fileID + chunkNo));
+
+            Boolean status = new ProtocolConnection(responsibleNode.protocolAddress).backupChunk(fileID, chunkNo, chunk);
+
+            if (status == null || !status) {
+                System.out.println("Error");
+                continue;
+            }
+
+
+
             Store.registerChunk(fileID, chunkNo, responsibleNode.identifier);
+
             Logger.fine("Chord", "node " + responsibleNode.identifier + " confirmed store " +
-                    "for chunk #" + chunkNo + " from file " + fileID);
-        } else {
-            System.out.println("ERROR");
+                        "for chunk #" + chunkNo + " from file " + fileID);
+
+            break;
         }
     }
 

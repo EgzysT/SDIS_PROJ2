@@ -9,8 +9,6 @@ import java.net.InetSocketAddress;
 
 import static common.protocol.ProtocolMessage.Type.*;
 
-// TODO close socket in case of exception
-
 public class ProtocolConnection extends Connection {
 
     public ProtocolConnection(SSLSocket socket) {
@@ -26,17 +24,23 @@ public class ProtocolConnection extends Connection {
         if (client == null)
             return null;
 
-        Boolean status = null;
+        Boolean status;
 
         try {
             send(new ProtocolMessage(BACKUP, fileID, chunkNo, chunk));
             status = ((ProtocolMessage) receive()).type == ACK;
             client.close();
         } catch (IOException e) {
-            Logger.warning("idk", "pls");
+            return null;
         }
 
         return status;
+    }
+
+    // Check if node has chunk
+    public Boolean checkChunk(String fileID, Integer chunkNo) {
+        return true;
+
     }
 
     public byte[] restoreChunk(String fileID, Integer chunkNo) {
@@ -44,14 +48,14 @@ public class ProtocolConnection extends Connection {
         if (client == null)
             return null;
 
-        byte[] chunk = null;
+        byte[] chunk;
 
         try {
             send(new ProtocolMessage(RESTORE, fileID, chunkNo));
             chunk = ((ProtocolMessage) receive()).chunk;
             client.close();
         } catch (IOException e) {
-            Logger.warning("idk", "pls2");
+            return null;
         }
 
         return chunk;
@@ -63,7 +67,7 @@ public class ProtocolConnection extends Connection {
            return null;
 
        try {
-           send(new ProtocolMessage(ProtocolMessage.Type.DELETE, fileID, chunkNo));
+           send(new ProtocolMessage(DELETE, fileID, chunkNo));
            ProtocolMessage reply = (ProtocolMessage) receive();
            client.close();
            return true;
