@@ -16,11 +16,11 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static java.nio.file.StandardOpenOption.READ;
+import static java.nio.file.StandardOpenOption.*;
 
 // TODO replication, handle error in connection
 
-public class Backup {
+public abstract class Backup {
 
     static Map<String, Boolean> instances;
 
@@ -28,7 +28,8 @@ public class Backup {
         instances = new ConcurrentHashMap<>();
     }
 
-    private Backup() {}
+
+
 
     private static Boolean checkRequirements(String filePath, String fileID) {
 
@@ -40,10 +41,10 @@ public class Backup {
 
         // TODO node may not have backed up file or chunk
         // Check if file is already backed up
-        if (Store.isBackedUp(fileID)) {
-            Logger.warning("Backup", "file " + fileID + " is already backed up");
-            return false;
-        }
+//        if (Store.isBackedUp(fileID)) {
+//            Logger.warning("Backup", "file " + fileID + " is already backed up");
+//            return false;
+//        }
 
         // Check if file is free
         if (ProtocolHandler.isFileBusy(fileID)) {
@@ -101,10 +102,6 @@ public class Backup {
                         Store.registerFile(fileID, filePath, chunkNo);
 
                         instances.computeIfPresent(fileID, (k,v) -> null);
-
-//                        System.out.println();
-//                        System.out.println(Store.debug());
-//                        System.out.println();
 
                         Logger.info("Backup", "completed backup protocol for file " + fileID);
 

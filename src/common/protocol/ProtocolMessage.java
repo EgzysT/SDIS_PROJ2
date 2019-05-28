@@ -13,18 +13,19 @@ class ProtocolMessage extends Message {
 
     Type type;
     String fileID;
-    Integer chunkNo;
+    Integer chunkNo, i;
     byte[] chunk;
 
     ProtocolMessage(Type type) {
         this.type = type;
     }
 
-    ProtocolMessage(Type type, String fileID, Integer chunkNo, byte[] chunk) {
+    ProtocolMessage(Type type, String fileID, Integer chunkNo, byte[] chunk, Integer i) {
         this.type = type;
         this.fileID = fileID;
         this.chunkNo = chunkNo;
         this.chunk = chunk;
+        this.i = i;
     }
 
     ProtocolMessage(Type type, String fileID, Integer chunkNo) {

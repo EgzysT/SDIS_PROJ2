@@ -20,7 +20,7 @@ public abstract class Dispatcher implements Runnable {
     protected SSLServerSocket server;
 
     static {
-        executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
+        executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(6);
     }
 
     public Dispatcher(Integer port) throws IOException {

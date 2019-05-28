@@ -38,4 +38,10 @@ public class ChordInfo implements Serializable {
     public String toString() {
         return identifier + " - " + chordAddress.getAddress().getHostAddress() + ":" + chordAddress.getPort();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        ChordInfo node = (ChordInfo) obj;
+        return chordAddress.equals(node.chordAddress) && chordAddress.getPort() == node.chordAddress.getPort();
+    }
 }

@@ -11,8 +11,9 @@ public interface ChordService {
     /**
      * Creates a new chord ring with a super node
      * @param nodeAddr Node's address
+     * @param superAddr Super node's address
      */
-    void join(InetSocketAddress nodeAddr);
+    void join(InetSocketAddress nodeAddr, InetSocketAddress superAddr);
 
     /**
      * Returns node's identifier

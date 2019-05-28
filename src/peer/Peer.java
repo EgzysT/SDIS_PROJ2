@@ -42,11 +42,12 @@ public class Peer extends UnicastRemoteObject implements PeerService {
         return instance;
     }
 
-    private void start(String accessPoint, InetSocketAddress addr) {
+    private void start(String accessPoint, InetSocketAddress nodeAddr, InetSocketAddress superAddr) {
 
-        ChordNode.instance().join(addr);
+        ChordNode.instance().join(nodeAddr, superAddr);
 
-        homeDir = Paths.get(System.getProperty("user.home") + File.separator + "Desktop" +
+        homeDir = Paths.get(
+                System.getProperty("user.home") + File.separator + "Desktop" +
                 File.separator + "peer" + ChordNode.instance().id() + File.separator
         );
 
@@ -93,7 +94,7 @@ public class Peer extends UnicastRemoteObject implements PeerService {
        );
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
 
         String sslDir = System.getProperty("user.dir") + File.separator + "ssl" + File.separator;
 
@@ -104,12 +105,24 @@ public class Peer extends UnicastRemoteObject implements PeerService {
         System.setProperty("javax.net.ssl.trustStorePassword", "123456");
 
         if (args.length < 2) {
-            System.out.println("Usage: java peer.Peer <accessPoint> <host:port>");
+            System.out.println("Usage: java peer.Peer <accessPoint> <host:port> [<superhost:port]");
             System.exit(-1);
         }
 
-        String[] tmp = args[1].split(":");
+        String[] host_port = args[1].split(":");
 
-        Peer.instance().start(args[0], new InetSocketAddress(tmp[0], Integer.parseInt(tmp[1])));
+        InetSocketAddress host = new InetSocketAddress(host_port[0], Integer.parseInt(host_port[1]));
+        InetSocketAddress superHost = null;
+
+        if (args.length > 2) {
+            String[] superhost_port = args[2].split(":");
+            superHost = new InetSocketAddress(superhost_port[0], Integer.parseInt(superhost_port[1]));
+        }
+
+        Peer.instance().start(
+                args[0],
+                host,
+                superHost
+        );
     }
 }

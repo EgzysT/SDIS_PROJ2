@@ -19,7 +19,7 @@ public class ProtocolConnection extends Connection {
         super(addr);
     }
 
-    public Boolean backupChunk(String fileID, Integer chunkNo, byte[] chunk) {
+    public Boolean backupChunk(String fileID, Integer chunkNo, byte[] chunk, Integer i) {
 
         if (client == null)
             return null;
@@ -27,20 +27,17 @@ public class ProtocolConnection extends Connection {
         Boolean status;
 
         try {
-            send(new ProtocolMessage(BACKUP, fileID, chunkNo, chunk));
-            status = ((ProtocolMessage) receive()).type == ACK;
+            send(new ProtocolMessage(BACKUP, fileID, chunkNo, chunk, i));
+            ProtocolMessage reply = ((ProtocolMessage) receive());
+
+            status = reply.type == ACK;
+
             client.close();
         } catch (IOException e) {
             return null;
         }
 
         return status;
-    }
-
-    // Check if node has chunk
-    public Boolean checkChunk(String fileID, Integer chunkNo) {
-        return true;
-
     }
 
     public byte[] restoreChunk(String fileID, Integer chunkNo) {
@@ -52,7 +49,13 @@ public class ProtocolConnection extends Connection {
 
         try {
             send(new ProtocolMessage(RESTORE, fileID, chunkNo));
-            chunk = ((ProtocolMessage) receive()).chunk;
+            ProtocolMessage reply = ((ProtocolMessage) receive());
+
+            if (reply.type == ACK)
+                chunk = reply.chunk;
+            else
+                chunk = new byte[0];
+
             client.close();
         } catch (IOException e) {
             return null;
@@ -66,23 +69,27 @@ public class ProtocolConnection extends Connection {
        if (client == null)
            return null;
 
+//       Boolean status;
+
        try {
            send(new ProtocolMessage(DELETE, fileID, chunkNo));
-           ProtocolMessage reply = (ProtocolMessage) receive();
+//           ProtocolMessage reply = (ProtocolMessage) receive();
+//
+//           status = reply.type == ACK;
+
            client.close();
-           return true;
        } catch(IOException e) {
-           Logger.warning("idk", "pls3");
+           return null;
        }
 
-       return false;
+       return true;
    }
 
     /**
      * Listen to requests
      * @return Request received
      */
-    ProtocolMessage listen() {
+    public ProtocolMessage listen() {
 
         if (client == null)
             return null;
@@ -92,7 +99,7 @@ public class ProtocolConnection extends Connection {
         try {
             message = (ProtocolMessage) receive();
         } catch (IOException e) {
-            Logger.warning("ChordHandler", "failed to listen to request");
+            Logger.warning("Chord", "failed to listen to request");
         }
 
         return message;
@@ -101,7 +108,7 @@ public class ProtocolConnection extends Connection {
     /**
      * Sends a reply to request
      */
-    void reply(Boolean success) {
+    public void reply(Boolean success) {
 
         if (client == null)
             return;
@@ -111,13 +118,14 @@ public class ProtocolConnection extends Connection {
                 send(new ProtocolMessage(ACK));
             else
                 send(new ProtocolMessage(NACK));
+
             client.close();
         } catch (IOException e) {
-            Logger.warning("ChordHandler", "failed to reply to request");
+            Logger.warning("Chord", "failed to reply to request");
         }
     }
 
-    void reply(byte[] chunk) {
+    public void reply(byte[] chunk) {
 
         if (client == null)
             return;
@@ -127,9 +135,10 @@ public class ProtocolConnection extends Connection {
                 send(new ProtocolMessage(ACK, chunk));
             else
                 send(new ProtocolMessage(NACK));
+
             client.close();
         } catch (IOException e) {
-            Logger.warning("ChordHandler", "failed to reply to request");
+            Logger.warning("Chord", "failed to reply to request");
         }
     }
 }

@@ -15,7 +15,7 @@ public class ProtocolHandler {
     private static ScheduledExecutorService executor;
 
     static {
-        executor = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+        executor = Executors.newScheduledThreadPool(4);
     }
 
     private ProtocolHandler() {}
