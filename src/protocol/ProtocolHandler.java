@@ -4,8 +4,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-// TODO protocols should wait for async operations to finish??
-
 /**
  * Protocol handler
  */
@@ -39,9 +37,8 @@ public class ProtocolHandler {
      * @return True if file is busy, false otherwise.
      */
     static boolean isFileBusy(String fileID) {
-        return Backup.instances.containsKey(fileID) ||
-                Restore.instances.containsKey(fileID) ||
-                Delete.instances.containsKey(fileID);
+        return Backup.instances.containsKey(fileID) || Restore.instances.containsKey(fileID) ||
+                Delete.instances.containsKey(fileID) || Reclaim.instance.get();
     }
 
     /**
@@ -50,9 +47,6 @@ public class ProtocolHandler {
      */
     static boolean isPeerFree() {
         return Backup.instances.isEmpty() ||
-                Restore.instances.isEmpty() ||
-                Delete.instances.isEmpty();
+                Restore.instances.isEmpty() || Delete.instances.isEmpty() || !Reclaim.instance.get();
     }
-
-
 }

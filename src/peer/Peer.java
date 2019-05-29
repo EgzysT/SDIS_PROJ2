@@ -1,10 +1,7 @@
 package peer;
 
 import chord.ChordNode;
-import protocol.Backup;
-import protocol.Delete;
-import protocol.ProtocolHandler;
-import protocol.Restore;
+import protocol.*;
 
 import java.io.File;
 import java.net.InetSocketAddress;
@@ -87,6 +84,15 @@ public class Peer extends UnicastRemoteObject implements PeerService {
                () -> Delete.deleteFile(filePath),
                0
        );
+    }
+
+    @Override
+    public void reclaim(Integer maxSize) {
+        ProtocolHandler.schedule(
+                () -> Reclaim.reclaimSpace(maxSize),
+                0
+        );
+
     }
 
     public static void main(String[] args) {

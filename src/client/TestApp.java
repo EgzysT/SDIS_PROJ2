@@ -8,20 +8,23 @@ import java.rmi.NotBoundException;
 
 public class TestApp {
 
-    private void processRequest(String accessPoint, String protocol, String filePath) {
+    private void processRequest(String accessPoint, String protocol, String arg) {
 
         try {
             PeerService service = (PeerService) Naming.lookup(accessPoint);
 
             switch (protocol) {
                 case "BACKUP":
-                    service.backup(filePath);
+                    service.backup(arg);
                     break;
                 case "RESTORE":
-                    service.restore(filePath);
+                    service.restore(arg);
                     break;
                 case "DELETE":
-                    service.delete(filePath);
+                    service.delete(arg);
+                    break;
+                case "RECLAIM":
+                    service.reclaim(Integer.parseInt(arg));
                     break;
                 default:
                     System.out.println("Protocol not found.");
@@ -38,7 +41,7 @@ public class TestApp {
     public static void main(String[] args) {
 
         if (args.length < 2) {
-            System.out.println("Usage: java client.TestApp <accessPoint> <protocol> <filePath>");
+            System.out.println("Usage: java client.TestApp <accessPoint> <protocol> [<filePath> | <maxSize>]");
             return;
         }
 

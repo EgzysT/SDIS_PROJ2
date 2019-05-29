@@ -455,7 +455,7 @@ public class ChordNode implements ChordService {
             if (reply == null) {
                 i--;
             } else if (reply.type == ACK) {
-                Logger.fine("Chord", "node " + n.identifier + " stored chunk #" + chunkNo + " of file " + fileID);
+                Logger.fine("Chord", "node " + n.identifier + " stored chunk #" + chunkNo + " from file " + fileID);
             }
         }
     }
@@ -473,7 +473,7 @@ public class ChordNode implements ChordService {
             if (reply == null) {
                 i--;
             } else if (reply.type == ACK) {
-                Logger.fine("Chord", "node " + n.identifier + " restored chunk #" + chunkNo + " of file " + fileID);
+                Logger.fine("Chord", "node " + n.identifier + " restored chunk #" + chunkNo + " from file " + fileID);
                 return reply.chunk;
             }
         }

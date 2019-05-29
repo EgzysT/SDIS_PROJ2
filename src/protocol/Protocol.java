@@ -31,12 +31,6 @@ public abstract class Protocol {
             return;
         }
 
-//        if (Store.hasChunkReplica(fileID, chunkNo, i)) {
-//            Logger.fine("Store", "peer already has chunk #" + chunkNo + " from file " + fileID);
-//            connection.reply(false);
-//            return;
-//        }
-
         // Check if peer has enough space for chunk
         if (Store.currentDiskSpace.get() + chunk.length > Store.maxDiskSpace.get()) {
             Logger.fine("Store", "peer does not have enough space for chunk #" + chunkNo + " from file " + fileID);
@@ -81,7 +75,7 @@ public abstract class Protocol {
     }
 
     /**
-     * Looks up for chunk
+     * Reads chunk
      * @param fileID File identifier
      * @param chunkNo Chunk number
      * @return Chunk
