@@ -14,19 +14,14 @@ import java.nio.file.Paths;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class Peer extends UnicastRemoteObject implements PeerService {
 
     private static Peer instance;
     public Path homeDir, backupDir, restoreDir;
-    public AtomicInteger currentDiskSpace, maxDiskSpace;
 
     private Peer() throws RemoteException {
         super(0);
-
-        currentDiskSpace = new AtomicInteger(0);
-        maxDiskSpace = new AtomicInteger(Integer.MAX_VALUE);
     }
 
     public static Peer instance() {

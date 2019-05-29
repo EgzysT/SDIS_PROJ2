@@ -17,7 +17,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static java.nio.file.StandardOpenOption.*;
 
-public class Restore {
+/**
+ * Restore protocol
+ */
+public abstract class Restore {
 
     static Map<String , Boolean> instances;
 
@@ -25,16 +28,15 @@ public class Restore {
         instances = new ConcurrentHashMap<>();
     }
 
-    private Restore() {}
-
     private static Boolean checkRequirements(String filePath, String fileID) {
 
+        // Check if file is backed up
         if (fileID == null) {
-            Logger.fine("Restore", "file " + filePath + " is not backed up by this peer");
+            Logger.fine("Restore", "file " + filePath + " is not backed up");
             return false;
         }
 
-        // Check if file is free
+        // Check if file is busy
         if (ProtocolHandler.isFileBusy(fileID)) {
             Logger.warning("Restore", "found another protocol instance for file " + fileID);
             return false;
@@ -45,7 +47,7 @@ public class Restore {
 
     public static void restoreFile(String filePath) {
 
-        String fileID = Store.getFile(filePath);
+        String fileID = Store.getFileID(filePath);
 
         if (!checkRequirements(filePath, fileID))
             return;
@@ -57,6 +59,12 @@ public class Restore {
 
         // First chunk of file
         byte[] chunk = ChordNode.instance().get(fileID, 0);
+
+        if (chunk == null) {
+            instances.computeIfPresent(fileID, (k,v) -> null);
+            Logger.warning("Restore", "failed to restore chunk #0 from file " + fileID);
+            return;
+        }
 
         try {
             Path path = Paths.get(Peer.instance().restoreDir + File.separator + Paths.get(filePath).getFileName());
@@ -76,7 +84,7 @@ public class Restore {
 
                     chunkNo++;
 
-                    if (chunkNo >= Store.files.get(fileID).chunks) {
+                    if (Store.files.get(fileID).chunks.equals(chunkNo)) {
 
                         try {
                             fileChannel.close();
@@ -91,8 +99,13 @@ public class Restore {
                         return;
                     }
 
-                    // TODO later check for errors
                     byte[] chunk = ChordNode.instance().get(fileID, chunkNo);
+
+                    if (chunk == null) {
+                        instances.computeIfPresent(fileID, (k,v) -> null);
+                        Logger.warning("Restore", "failed to restore chunk #" + chunkNo + " from file " + fileID);
+                        return;
+                    }
 
                     attachment = ByteBuffer.wrap(chunk);
 

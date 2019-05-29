@@ -4,6 +4,7 @@ import common.chord.ChordConnection;
 import common.chord.ChordDispatcher;
 import common.protocol.ProtocolConnection;
 import common.protocol.ProtocolDispatcher;
+import common.protocol.ProtocolMessage;
 import protocol.Protocol;
 import store.ChunkInfo;
 import store.Store;
@@ -19,6 +20,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+
+import static common.protocol.ProtocolMessage.Type.ACK;
+
+// TODO if super node is dead, replace
+// TODO check if other replicas are still alive
+// TODO send replica list to reduce number of messages
 
 /**
  * ChordHandler's node
@@ -319,8 +326,6 @@ public class ChordNode implements ChordService {
             }
         }
 
-//        transferKeys();
-
 //        System.out.println(ChordNode.instance());
 
 //        Logger.fine("Chord", "stabilized node");
@@ -384,11 +389,11 @@ public class ChordNode implements ChordService {
 
                     if (chunk != null && chunk.getValue().replicas.contains(i)) {
 
-                        ChordInfo responsibleNode = findSuccessor(ChordHandler.hashToKey(fileID + chunk.getKey(), i));
+                        ChordInfo n = findSuccessor(ChordHandler.hashToKey(fileID + chunk.getKey(), i));
 
-                        if (!responsibleNode.equals(info)) {
-                            System.out.println("Transferring #" + chunk.getKey() + "[" + i + "]" + " to " + responsibleNode.identifier);
-                            Protocol.transferChunk(responsibleNode.protocolAddress, fileID, chunk.getKey(), i);
+                        if (!n.equals(info)) {
+                            System.out.println("Transferring #" + chunk.getKey() + "[" + i + "]" + " to " + n.identifier);
+                            Protocol.transferChunk(n.protocolAddress, fileID, chunk.getKey(), i);
                         }
                     }
                 }
@@ -444,12 +449,12 @@ public class ChordNode implements ChordService {
 
             ChordInfo n = findSuccessor(ChordHandler.hashToKey(fileID + chunkNo, i));
 
-            Boolean status = new ProtocolConnection(n.protocolAddress).backupChunk(fileID, chunkNo, chunk, i);
+            ProtocolMessage reply = new ProtocolConnection(n.protocolAddress).backupChunk(fileID, chunkNo, chunk, i);
 
             // Repeat if there was an error in connection, ignore if received NACK
-            if (status == null) {
+            if (reply == null) {
                 i--;
-            } else if (status) {
+            } else if (reply.type == ACK) {
                 Logger.fine("Chord", "node " + n.identifier + " stored chunk #" + chunkNo + " of file " + fileID);
             }
         }
@@ -462,14 +467,14 @@ public class ChordNode implements ChordService {
 
             ChordInfo n = findSuccessor(ChordHandler.hashToKey(fileID + chunkNo, i));
 
-            byte[] chunk = new ProtocolConnection(n.protocolAddress).restoreChunk(fileID, chunkNo);
+            ProtocolMessage reply = new ProtocolConnection(n.protocolAddress).restoreChunk(fileID, chunkNo);
 
             // Repeat if there was an error in connection, ignore if received NACK
-            if (chunk == null) {
+            if (reply == null) {
                 i--;
-            } else if (chunk.length != 0) {
+            } else if (reply.type == ACK) {
                 Logger.fine("Chord", "node " + n.identifier + " restored chunk #" + chunkNo + " of file " + fileID);
-                return chunk;
+                return reply.chunk;
             }
         }
 
@@ -483,12 +488,12 @@ public class ChordNode implements ChordService {
 
             ChordInfo n = findSuccessor(ChordHandler.hashToKey(fileID + chunkNo, i));
 
-            Boolean status = new ProtocolConnection(n.protocolAddress).deleteChunk(fileID, chunkNo);
+            ProtocolMessage reply = new ProtocolConnection(n.protocolAddress).deleteChunk(fileID, chunkNo);
 
             // Repeat if there was an error in connection, ignore if received NACK
-            if (status == null) {
+            if (reply == null) {
                 i--;
-            } else if (status) {
+            } else if (reply.type == ACK) {
                 Logger.fine("Chord", "node " + n.identifier + " deleted chunk #" + chunkNo + " of file " + fileID);
             }
         }

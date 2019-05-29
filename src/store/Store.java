@@ -1,63 +1,52 @@
 package store;
 
-import peer.Peer;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Store {
 
     public static Map<String, FileInfo> files;
     public static Map<String, Map<Integer, ChunkInfo>> chunks;
+    public static AtomicInteger currentDiskSpace, maxDiskSpace;
 
     static {
         files = new ConcurrentHashMap<>();
         chunks = new ConcurrentHashMap<>();
+
+        currentDiskSpace = new AtomicInteger(0);
+        maxDiskSpace = new AtomicInteger(Integer.MAX_VALUE);
     }
 
     private Store() {}
 
-//    /**
-//     * Register a file that was backed up.
-//     * @param fileID            File ID
-//     * @param filePath          File path
-//     */
+    /**
+     * Registers a file.
+     * @param fileID File identifier
+     * @param filePath File path
+     */
     public static void registerFile(String fileID, String filePath, Integer nrChunks) {
         files.putIfAbsent(fileID, new FileInfo(filePath, nrChunks));
     }
 
-//    /**
-//     * Register chunk that was stored by a peer.
-//     * @param fileID    File ID
-//     * @param chunkNo   Chunk number
-//     * @param nodeID    Node that stored chunk
-//     */
-//    public static void registerChunk(String fileID, Integer chunkNo, BigInteger nodeID) {
-//        chunks.compute(fileID, (k1, v1) -> {
-//            if (v1 == null)
-//                v1 = new ConcurrentHashMap<>();
-//
-//            v1.compute(chunkNo, (k2, v2) -> {
-//                if (v2 == null)
-//                    v2 = new ChunkInfo();
-//
-//                v2.peers.add(nodeID);
-//
-//                return v2;
-//            });
-//
-//            return v1;
-//        });
-//    }
+    /**
+     * Unregisters a file.
+     * @param fileID File identifier
+     */
+    public static void unregisterFile(String fileID) {
+        files.remove(fileID);
+    }
 
     /**
-     * Register chunk that was stored.
-     * @param fileID    File ID
-     * @param chunkNo   Chunk number
+     * Registers chunk.
+     * @param fileID File identifier
+     * @param chunkNo Chunk number
+     * @param chunkSize Chunk size
+     * @param replicaNo Replica number
      */
-    public static void registerChunk(String fileID, Integer chunkNo, Integer chunkSize, Integer i) {
+    public static void registerChunk(String fileID, Integer chunkNo, Integer chunkSize, Integer replicaNo) {
 
         chunks.compute(fileID, (k1, v1) -> {
             if (v1 == null)
@@ -67,10 +56,10 @@ public class Store {
 
                 if (v2 == null) {
                     v2 = new ChunkInfo(chunkSize);
-                    Peer.instance().currentDiskSpace.addAndGet(chunkSize);
+                    currentDiskSpace.addAndGet(chunkSize);
                 }
 
-                v2.replicas.add(i);
+                v2.replicas.add(replicaNo);
 
                 return v2;
             });
@@ -80,51 +69,62 @@ public class Store {
     }
 
    /**
-    * Unregister chunk that was deleted.
-    * @param fileID   File ID
-    * @param chunkNo  Chunk number
+    * Unregister chunk.
+    * @param fileID File identifier
+    * @param chunkNo Chunk number
+    * @param replicaNo Replica number
     */
-   public static void unregisterChunk(String fileID, Integer chunkNo, Integer i) {
+   public static void unregisterChunk(String fileID, Integer chunkNo, Integer replicaNo) {
 
        chunks.computeIfPresent(fileID, (k1, v1) -> {
 
            v1.computeIfPresent(chunkNo, (k2, v2) -> {
 
-               if (i == -1)
+               if (replicaNo == -1)
                    v2.replicas.clear();
                else
-                   v2.replicas.remove(i);
+                   v2.replicas.remove(replicaNo);
 
                if (v2.replicas.isEmpty()) {
-                   Peer.instance().currentDiskSpace.addAndGet(-v2.size);
+                   currentDiskSpace.addAndGet(-v2.size);
                    v2 = null;
                }
 
                return v2;
            });
 
+           if (v1.isEmpty())
+               v1 = null;
+
            return v1;
        });
    }
 
     /**
-     * Check if node has chunk backed up.
+     * Checks if node has chunk backed up.
      * @param fileID File identifier
      * @param chunkNo Chunk number
      * @return True if node has chunk backed up, false otherwise
      */
     public static Boolean hasChunk(String fileID, Integer chunkNo) {
-        return chunks.containsKey(fileID)
-                && chunks.get(fileID).containsKey(chunkNo);
+        return chunks.containsKey(fileID) && chunks.get(fileID).containsKey(chunkNo);
     }
 
-//    public static Boolean hasChunkReplica(String fileID, Integer chunkNo, Integer i) {
-//        return chunks.containsKey(fileID)
-//                && chunks.get(fileID).containsKey(chunkNo)
-//                && chunks.get(fileID).get(chunkNo).replicas.contains(i);
-//    }
+    /**
+     * Checks if file is backed up.
+     * @param fileID File identifier
+     * @return True if file is backed up, false otherwise
+     */
+    public static Boolean isBackedUp(String fileID) {
+        return files.containsKey(fileID) || chunks.containsKey(fileID);
+    }
 
-    public static String getFile(String filePath) {
+    /**
+     * Returns file identifier from file path
+     * @param filePath File path
+     * @return File identifier corresponding file path
+     */
+    public static String getFileID(String filePath) {
 
         Path fileName = Paths.get(filePath).getFileName();
 

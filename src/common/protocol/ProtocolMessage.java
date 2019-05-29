@@ -2,19 +2,19 @@ package common.protocol;
 
 import common.Message;
 
-class ProtocolMessage extends Message {
+public class ProtocolMessage extends Message {
 
-    enum Type {
+    public enum Type {
         BACKUP,
         RESTORE,
         DELETE,
         ACK, NACK
     }
 
-    Type type;
-    String fileID;
-    Integer chunkNo, i;
-    byte[] chunk;
+    public Type type;
+    public String fileID;
+    public Integer chunkNo, i;
+    public byte[] chunk;
 
     ProtocolMessage(Type type) {
         this.type = type;

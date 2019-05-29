@@ -26,7 +26,7 @@ public abstract class Protocol {
 
         // Check if peer has chunk
         if (Store.hasChunk(fileID, chunkNo)) {
-            Logger.fine("Store", "peer already has chunk #" + chunkNo + " from file " + fileID);
+//            Logger.fine("Store", "peer already has chunk #" + chunkNo + " from file " + fileID);
             connection.reply(true);
             return;
         }
@@ -38,7 +38,7 @@ public abstract class Protocol {
 //        }
 
         // Check if peer has enough space for chunk
-        if (Peer.instance().currentDiskSpace.get() + chunk.length > Peer.instance().maxDiskSpace.get()) {
+        if (Store.currentDiskSpace.get() + chunk.length > Store.maxDiskSpace.get()) {
             Logger.fine("Store", "peer does not have enough space for chunk #" + chunkNo + " from file " + fileID);
             connection.reply(false);
             return;
@@ -90,7 +90,7 @@ public abstract class Protocol {
 
         // Check if peer has chunk
         if (!Store.hasChunk(fileID, chunkNo)) {
-            Logger.fine("Store", "peer does not have chunk #" + chunkNo + " from file " + fileID + " stored");
+//            Logger.fine("Store", "peer does not have chunk #" + chunkNo + " from file " + fileID + " stored");
             connection.reply((byte[]) null);
             return;
         }
@@ -172,38 +172,26 @@ public abstract class Protocol {
     }
 
     /**
-     * Deletes chunk
-     * @param fileID
-     * @param chunkNo
-     * @return true if found and deleted
+     * Deletes chunk.
+     * @param fileID File identifier
+     * @param chunkNo Chunk number
+     * @return True if deleted, false otherwise
      */
-    public static void deleteChunk(String fileID, Integer chunkNo, Integer i) {
-
-//        // Check if peer has chunk
-//        if (!Store.hasChunkReplica(fileID, chunkNo, i)) {
-//            Logger.fine("Store", "peer does not have chunk #" + chunkNo + " from file " + fileID + " stored");
-//            return false;
-//        }
+    public static Boolean deleteChunk(String fileID, Integer chunkNo, Integer i) {
 
         Store.unregisterChunk(fileID, chunkNo, i);
 
-        // TODO check
         if (!Store.hasChunk(fileID, chunkNo)) {
 
-//            System.out.println("Deleting  chunk #" + chunkNo + " replica " + i);
-
             try {
-                if (!Files.deleteIfExists(Paths.get(Peer.instance().backupDir + File.separator + fileID + File.separator + chunkNo + ".chunk"))) {
-                    Logger.fine("Store", "peer does not have chunk #" + chunkNo + " from file " + fileID + " on disk");
-//                    return false;
-                }
+                return Files.deleteIfExists(Paths.get(Peer.instance().backupDir + File.separator + fileID + File.separator + chunkNo + ".chunk"));
             } catch (IOException e) {
                 e.printStackTrace();
                 System.exit(-1);
             }
         }
 
-//        return true;
+        return false;
     }
 }
 

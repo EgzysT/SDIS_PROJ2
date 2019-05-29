@@ -34,20 +34,24 @@ public class ProtocolHandler {
     }
 
     /**
-     * Check if file is being used in any protocol instance.
+     * Checks if file is being used in any protocol instance.
      * @param fileID fileID
      * @return True if file is busy, false otherwise.
      */
     static boolean isFileBusy(String fileID) {
-        return Backup.instances.containsKey(fileID) || Restore.instances.containsKey(fileID);
+        return Backup.instances.containsKey(fileID) ||
+                Restore.instances.containsKey(fileID) ||
+                Delete.instances.containsKey(fileID);
     }
 
     /**
-     * Check if peer is running any protocol instance.
+     * Checks if peer is running any protocol instance.
      * @return True if is free, false otherwise.
      */
     static boolean isPeerFree() {
-        return Backup.instances.isEmpty() || Restore.instances.isEmpty();
+        return Backup.instances.isEmpty() ||
+                Restore.instances.isEmpty() ||
+                Delete.instances.isEmpty();
     }
 
 

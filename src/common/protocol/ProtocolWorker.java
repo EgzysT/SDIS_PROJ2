@@ -28,7 +28,7 @@ public class ProtocolWorker extends Worker {
                 Protocol.readChunk(connection, request.fileID, request.chunkNo);
                 return;
             case DELETE:
-                Protocol.deleteChunk(request.fileID, request.chunkNo, -1);
+                connection.reply(Protocol.deleteChunk(request.fileID, request.chunkNo, -1));
                 return;
             default:
                 Logger.severe("Protocol", "invalid request received");

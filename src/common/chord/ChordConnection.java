@@ -8,7 +8,6 @@ import javax.net.ssl.SSLSocket;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
 import java.util.List;
 
 /**

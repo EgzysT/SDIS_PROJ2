@@ -30,7 +30,7 @@ public class ChordHandler {
     static {
         m = 32;
         r = 10;
-        repDeg = 2;
+        repDeg = 5;
         executor = Executors.newScheduledThreadPool(2);
     }
 

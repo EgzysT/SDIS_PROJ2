@@ -8,9 +8,9 @@ import store.Store;
 import utils.Logger;
 
 /**
- * Delete
+ * Delete protocol
  */
-public class Delete {
+public abstract class Delete {
 
 	static Map<String , Boolean> instances;
 
@@ -19,20 +19,25 @@ public class Delete {
 	}
 	
 	private static boolean checkRequirements(String filePath, String fileID) {
-//		if (!Store.isBackedUp(fileID)) {
-//			Logger.warning("Delete", "file " + filePath + " was not previously backed up");
-//			return false;
-//		}
 
+		// Check if file is backed up
+		if (fileID == null) {
+			Logger.warning("Delete", "file " + filePath + " is not backed up");
+			return false;
+		}
+
+		// Check if file is busy
 		if (ProtocolHandler.isFileBusy(fileID)) {
-            Logger.warning("Backup", "found another protocol instance for file " + fileID);
+            Logger.warning("Delete", "found another protocol instance for file " + fileID);
             return false;
 		}
+
 		return true;
 	}
 
 	public static void deleteFile(String filePath) {
-		String fileID = Store.getFile(filePath);
+
+		String fileID = Store.getFileID(filePath);
 
 		if (!checkRequirements(filePath, fileID))
             return;
@@ -46,10 +51,11 @@ public class Delete {
 			ChordNode.instance().remove(fileID, chunkNo);
 		}
 
-		instances.computeIfPresent(fileID, (k,v) -> null);
+		// TODO if a dead node comes back with store, send check messages
 
-		// TODO
 		Store.files.remove(fileID);
+
+		instances.computeIfPresent(fileID, (k,v) -> null);
 
 		Logger.info("Delete", "completed delete protocol for file " + fileID);
 	}

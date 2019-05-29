@@ -18,8 +18,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static java.nio.file.StandardOpenOption.*;
 
-// TODO replication, handle error in connection
-
+/**
+ * Backup protocol
+ */
 public abstract class Backup {
 
     static Map<String, Boolean> instances;
@@ -28,38 +29,38 @@ public abstract class Backup {
         instances = new ConcurrentHashMap<>();
     }
 
-
-
-
     private static Boolean checkRequirements(String filePath, String fileID) {
 
-        // Check if file exists
-        if (!Files.exists(Paths.get(filePath))) {
-            Logger.warning("Backup", "file" + filePath + " does not exist");
+        // TODO node may not have backed up file or chunk
+        // Check if file is backed up
+        if (Store.isBackedUp(fileID)) {
+            Logger.warning("Backup", "file " + fileID + " is already backed up");
             return false;
         }
 
-        // TODO node may not have backed up file or chunk
-        // Check if file is already backed up
-//        if (Store.isBackedUp(fileID)) {
-//            Logger.warning("Backup", "file " + fileID + " is already backed up");
-//            return false;
-//        }
-
-        // Check if file is free
+        // Check if file is busy
         if (ProtocolHandler.isFileBusy(fileID)) {
             Logger.warning("Backup", "found another protocol instance for file " + fileID);
             return false;
         }
 
-        // TODO Check if file is modified
-        // Maybe use file data not in hash but in start of backup
-        // To allow several nodes to recover it
+        // TODO check
+        // Check if file is modified
+        if (Store.getFileID(filePath) != null) {
+            Logger.warning("Backup", "deleting old version of file " + filePath);
+            Delete.deleteFile(filePath);
+        }
 
         return true;
     }
 
     public static void backupFile(String filePath) {
+
+        // Check if file exists
+        if (!Files.exists(Paths.get(filePath))) {
+            Logger.warning("Backup", "file " + filePath + " not found");
+            return;
+        }
 
         String fileID = Utils.generateFileID(filePath);
 
@@ -77,6 +78,8 @@ public abstract class Backup {
             Path path = Paths.get(filePath);
             AsynchronousFileChannel fileChannel = AsynchronousFileChannel.open(path, READ);
             ByteBuffer buffer = ByteBuffer.allocate(64000);
+
+            long fileSize = fileChannel.size();
 
             fileChannel.read(buffer, 0, buffer, new CompletionHandler<Integer, ByteBuffer>() {
 
@@ -97,6 +100,17 @@ public abstract class Backup {
                             fileChannel.close();
                         } catch (IOException e) {
                             Logger.severe("Backup", "failed to close file channel");
+                        }
+
+                        if (fileSize % 64000 == 0) {
+
+                            ChordNode.instance().put(
+                                    fileID,
+                                    chunkNo,
+                                    new byte[0]
+                            );
+
+                            chunkNo++;
                         }
 
                         Store.registerFile(fileID, filePath, chunkNo);

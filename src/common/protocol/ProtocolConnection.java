@@ -19,74 +19,82 @@ public class ProtocolConnection extends Connection {
         super(addr);
     }
 
-    public Boolean backupChunk(String fileID, Integer chunkNo, byte[] chunk, Integer i) {
+    /**
+     * Requests backup of a chunk.
+     * @param fileID File identifier
+     * @param chunkNo Chunk number
+     * @param chunk Chunk
+     * @param replicaNo Replica number
+     * @return Reply
+     */
+    public ProtocolMessage backupChunk(String fileID, Integer chunkNo, byte[] chunk, Integer replicaNo) {
 
         if (client == null)
             return null;
 
-        Boolean status;
+        ProtocolMessage reply;
 
         try {
-            send(new ProtocolMessage(BACKUP, fileID, chunkNo, chunk, i));
-            ProtocolMessage reply = ((ProtocolMessage) receive());
-
-            status = reply.type == ACK;
-
+            send(new ProtocolMessage(BACKUP, fileID, chunkNo, chunk, replicaNo));
+            reply = ((ProtocolMessage) receive());
             client.close();
         } catch (IOException e) {
             return null;
         }
 
-        return status;
+        return reply;
     }
 
-    public byte[] restoreChunk(String fileID, Integer chunkNo) {
+    /**
+     * Requests restore of a chunk.
+     * @param fileID File identifier
+     * @param chunkNo Chunk number
+     * @return Reply
+     */
+    public ProtocolMessage restoreChunk(String fileID, Integer chunkNo) {
 
         if (client == null)
             return null;
 
-        byte[] chunk;
+        ProtocolMessage reply;
 
         try {
             send(new ProtocolMessage(RESTORE, fileID, chunkNo));
-            ProtocolMessage reply = ((ProtocolMessage) receive());
-
-            if (reply.type == ACK)
-                chunk = reply.chunk;
-            else
-                chunk = new byte[0];
-
+            reply = ((ProtocolMessage) receive());
             client.close();
         } catch (IOException e) {
             return null;
         }
 
-        return chunk;
+        return reply;
     }
 
-   public Boolean deleteChunk(String fileID, Integer chunkNo) {
+    /**
+     * Requests deletion of a chunk.
+     * @param fileID File identifier
+     * @param chunkNo Chunk number
+     * @return Reply
+     */
+   public ProtocolMessage deleteChunk(String fileID, Integer chunkNo) {
 
        if (client == null)
            return null;
 
-//       Boolean status;
+       ProtocolMessage reply;
 
        try {
            send(new ProtocolMessage(DELETE, fileID, chunkNo));
-//           ProtocolMessage reply = (ProtocolMessage) receive();
-//
-//           status = reply.type == ACK;
-
+           reply = (ProtocolMessage) receive();
            client.close();
        } catch(IOException e) {
            return null;
        }
 
-       return true;
+       return reply;
    }
 
     /**
-     * Listen to requests
+     * Listen to requests.
      * @return Request received
      */
     public ProtocolMessage listen() {
@@ -106,7 +114,7 @@ public class ProtocolConnection extends Connection {
     }
 
     /**
-     * Sends a reply to request
+     * Sends a reply to request.
      */
     public void reply(Boolean success) {
 
@@ -125,6 +133,10 @@ public class ProtocolConnection extends Connection {
         }
     }
 
+    /**
+     * Sends a reply to a request.
+     * @param chunk Chunk
+     */
     public void reply(byte[] chunk) {
 
         if (client == null)
