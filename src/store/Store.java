@@ -1,15 +1,22 @@
 package store;
 
+import chord.ChordHandler;
+import chord.ChordNode;
+import peer.Peer;
+import utils.Logger;
 import utils.Utils;
 
+import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Store {
+public abstract class Store {
 
     public static Map<String, FileInfo> files;
     public static Map<String, Map<Integer, ChunkInfo>> chunks;
@@ -22,8 +29,6 @@ public class Store {
         currentDiskSpace = new AtomicInteger(0);
         maxDiskSpace = new AtomicInteger(Integer.MAX_VALUE);
     }
-
-    private Store() {}
 
     /**
      * Registers a file.
@@ -126,7 +131,7 @@ public class Store {
    }
 
     /**
-     * Checks if node has chunk backed up.
+     * Checks if node has chunk backed up
      * @param fileID File identifier
      * @param chunkNo Chunk number
      * @return True if node has chunk backed up, false otherwise
@@ -135,12 +140,19 @@ public class Store {
         return chunks.containsKey(fileID) && chunks.get(fileID).containsKey(chunkNo);
     }
 
+    /**
+     * Checks if node has chunk's replica
+     * @param fileID File identifier
+     * @param chunkNo Chunk number
+     * @param replicaNo Replica number
+     * @return True if node has chunk's replica, false otherwise
+     */
     public static Boolean hasChunkReplica(String fileID, Integer chunkNo, Integer replicaNo) {
         return hasChunk(fileID, chunkNo) && chunks.get(fileID).get(chunkNo).replicas.contains(replicaNo);
     }
 
     /**
-     * Checks if file is backed up.
+     * Checks if file is backed up
      * @param fileID File identifier
      * @return True if file is backed up, false otherwise
      */
@@ -163,6 +175,77 @@ public class Store {
         }
 
         return null;
+    }
+
+    public static void importStore() {
+
+        try {
+
+            if (Files.exists(Paths.get(Peer.instance().homeDir + File.separator + "store.bak"))) {
+
+                FileInputStream file = new FileInputStream(
+                        Peer.instance().homeDir + File.separator + "store.bak"
+                );
+
+                ObjectInputStream in = new ObjectInputStream(file);
+
+                HashMap<String, Object> objects = (HashMap<String, Object>) in.readObject();
+
+                files = (Map<String, FileInfo>) objects.get("files");
+                chunks = (Map<String, Map<Integer, ChunkInfo>>) objects.get("chunks");
+                currentDiskSpace = (AtomicInteger) objects.get("currentDiskSpace");
+                maxDiskSpace = (AtomicInteger) objects.get("maxDiskSpace");
+
+                in.close();
+                file.close();
+
+                Logger.fine("Chord", "imported store");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
+        ChordHandler.schedule(
+                Store::exportStore,
+                5000
+        );
+    }
+
+
+    public static void exportStore() {
+
+        try {
+            FileOutputStream file = new FileOutputStream(
+                    Peer.instance().homeDir + File.separator + "store.bak"
+            );
+
+            ObjectOutputStream out = new ObjectOutputStream(file);
+
+            HashMap<String, Object> objects = new HashMap<>();
+            objects.put("files", Store.files);
+            objects.put("chunks", Store.chunks);
+            objects.put("currentDiskSpace", Store.currentDiskSpace);
+            objects.put("maxDiskSpace", Store.maxDiskSpace);
+
+            out.writeObject(objects);
+            out.flush();
+
+            out.close();
+            file.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
+        Logger.fine("Chord", "exported store");
+
+        ChordHandler.schedule(
+                Store::exportStore,
+                5000
+        );
     }
 
     public static String debug() {

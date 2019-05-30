@@ -5,7 +5,7 @@ import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
-public final class Logger {
+public abstract class Logger {
 
     private static java.util.logging.Logger logger;
 

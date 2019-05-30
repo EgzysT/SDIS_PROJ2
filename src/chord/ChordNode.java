@@ -18,11 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 import static common.protocol.ProtocolMessage.Type.*;
-
-// TODO check if other replicas are still alive
 
 /**
  * ChordHandler's node
@@ -292,16 +289,16 @@ public class ChordNode implements ChordService {
         else
             new ChordConnection(successor().chordAddress).notify(info);
 
-        List<ChordInfo> succ;
+        List<ChordInfo> successorList;
 
         if (successor().equals(info))
-            succ = new ArrayList<>(successors.values());
+            successorList = new ArrayList<>(successors.values());
         else
-            succ = new ChordConnection(successor().chordAddress).getSuccessors();
+            successorList = new ChordConnection(successor().chordAddress).getSuccessors();
 
-        if (succ != null) {
-            for (int i = 0; i < succ.size(); i++) {
-                successors.put(i + 2, succ.get(i));
+        if (successorList != null) {
+            for (int i = 0; i < successorList.size(); i++) {
+                successors.put(i + 2, successorList.get(i));
             }
         }
 
@@ -317,7 +314,7 @@ public class ChordNode implements ChordService {
      */
     private void fixFinger(Integer i) {
 
-        BigInteger start = Utils.start(info.identifier, i);
+        BigInteger start = info.identifier.add(new BigInteger("2").pow(i - 1));
 
         if (i.equals(1))
             successor(findSuccessor(start));

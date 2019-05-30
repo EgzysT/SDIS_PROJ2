@@ -8,10 +8,13 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public final class Utils {
+public abstract class Utils {
 
-    private Utils() {}
-
+    /**
+     * Generates node's identifier
+     * @param address Node's address
+     * @return Node's identifier
+     */
     public static String generateChordID(String address) {
 
         StringBuilder hexString = new StringBuilder();
@@ -30,6 +33,11 @@ public final class Utils {
         return hexString.toString();
     }
 
+    /**
+     * Generates file's identifier
+     * @param filePath File path
+     * @return File's identifier
+     */
     public static String generateFileID(String filePath) {
 
         StringBuilder hexString = new StringBuilder();
@@ -53,10 +61,14 @@ public final class Utils {
         return hexString.toString();
     }
 
-    public static BigInteger start(BigInteger n, Integer i) {
-        return n.add(new BigInteger("2").pow(i - 1));
-    }
-
+    /**
+     * Checks if value between lower and upper bounds
+     * @param value Value to check
+     * @param lower Lower bound
+     * @param upper Upper bound
+     * @param closed Include upper bound
+     * @return True if valus is between lower and upper bound, false otherwise
+     */
     public static Boolean inRange(BigInteger value, BigInteger lower, BigInteger upper, Boolean closed) {
 
         if (lower.compareTo(upper) < 0) {
@@ -72,6 +84,9 @@ public final class Utils {
         }
     }
 
+    /**
+     * Clears screen
+     */
     public static void clearScreen() {
         System.out.print("\033[H\033[2J");
         System.out.flush();

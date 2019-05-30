@@ -2,6 +2,7 @@ package peer;
 
 import chord.ChordNode;
 import protocol.*;
+import store.Store;
 
 import java.io.File;
 import java.net.InetSocketAddress;
@@ -53,6 +54,9 @@ public class Peer extends UnicastRemoteObject implements PeerService {
             e.printStackTrace();
             System.exit(-1);
         }
+
+        // Import store
+        Store.importStore();
 
         try {
             Naming.rebind(accessPoint, this);

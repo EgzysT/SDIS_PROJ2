@@ -44,7 +44,6 @@ public abstract class Backup {
             return false;
         }
 
-        // TODO check
         // Check if file is modified
         if (Store.getFileID(filePath) != null) {
             Logger.warning("Backup", "deleting old version of file " + filePath);
@@ -136,12 +135,6 @@ public abstract class Backup {
                     chunkOffset += result;
 
                     fileChannel.read(attachment, chunkOffset, attachment, this);
-
-                    // TODO test @ FEUP
-//                    ProtocolHandler.schedule(
-//                            () -> fileChannel.read(attachment, chunkOffset, attachment, this),
-//                            100
-//                    );
                 }
 
                 @Override
