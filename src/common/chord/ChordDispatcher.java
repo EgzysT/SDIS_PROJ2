@@ -1,6 +1,6 @@
 package common.chord;
 
-import chord.ChordNode;
+import chord.ChordHandler;
 import common.Dispatcher;
 import utils.Logger;
 
@@ -8,7 +8,7 @@ import javax.net.ssl.SSLSocket;
 import java.io.IOException;
 
 /**
- * ChordHandler's dispatcher
+ * Chord's dispatcher
  */
 public class ChordDispatcher extends Dispatcher {
 
@@ -26,6 +26,6 @@ public class ChordDispatcher extends Dispatcher {
     @Override
     public void awaitConnection() throws IOException {
         ChordConnection connection = new ChordConnection((SSLSocket) server.accept());
-        executor.submit(new ChordWorker(connection));
+        ChordHandler.submit(new ChordWorker(connection));
     }
 }

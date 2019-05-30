@@ -13,15 +13,8 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 public abstract class Dispatcher implements Runnable {
 
-    /** Dispatcher's executor, shared with all dispatchers */
-    protected static ThreadPoolExecutor executor;
-
     /** Server socket */
     protected SSLServerSocket server;
-
-    static {
-        executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(6);
-    }
 
     public Dispatcher(Integer port) throws IOException {
         server = SocketFactory.getServerSocket(port);
@@ -39,7 +32,7 @@ public abstract class Dispatcher implements Runnable {
     }
 
     /**
-     * Handles incoming core
+     * Handles incoming connection
      * @throws IOException
      */
     protected abstract void awaitConnection() throws IOException;

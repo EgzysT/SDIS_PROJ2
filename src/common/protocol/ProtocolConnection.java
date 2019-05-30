@@ -35,7 +35,7 @@ public class ProtocolConnection extends Connection {
         ProtocolMessage reply;
 
         try {
-            send(new ProtocolMessage(BACKUP, fileID, chunkNo, chunk, replicaNo));
+            send(new ProtocolMessage(BACKUP_CHUNK, fileID, chunkNo, chunk, replicaNo));
             reply = ((ProtocolMessage) receive());
             client.close();
         } catch (IOException e) {
@@ -59,7 +59,7 @@ public class ProtocolConnection extends Connection {
         ProtocolMessage reply;
 
         try {
-            send(new ProtocolMessage(RESTORE, fileID, chunkNo));
+            send(new ProtocolMessage(RESTORE_CHUNK, fileID, chunkNo));
             reply = ((ProtocolMessage) receive());
             client.close();
         } catch (IOException e) {
@@ -83,10 +83,28 @@ public class ProtocolConnection extends Connection {
        ProtocolMessage reply;
 
        try {
-           send(new ProtocolMessage(DELETE, fileID, chunkNo));
+           send(new ProtocolMessage(DELETE_CHUNK, fileID, chunkNo));
            reply = (ProtocolMessage) receive();
            client.close();
-       } catch(IOException e) {
+       } catch (IOException e) {
+           return null;
+       }
+
+       return reply;
+   }
+
+   public ProtocolMessage hasChunk(String fileID, Integer chunkNo, Integer replicaNo) {
+
+       if (client == null)
+           return null;
+
+       ProtocolMessage reply;
+
+       try {
+           send(new ProtocolMessage(HAS_CHUNK, fileID, chunkNo, replicaNo));
+           reply = ((ProtocolMessage) receive());
+           client.close();
+       } catch (IOException e) {
            return null;
        }
 

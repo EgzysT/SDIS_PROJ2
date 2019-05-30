@@ -53,7 +53,7 @@ public abstract class Delete {
 
 		// TODO if a dead node comes back with store, send check messages
 
-		Store.files.remove(fileID);
+		Store.unregisterFile(fileID);
 
 		instances.computeIfPresent(fileID, (k,v) -> null);
 

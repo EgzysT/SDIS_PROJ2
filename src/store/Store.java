@@ -1,7 +1,10 @@
 package store;
 
+import utils.Utils;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,15 +43,16 @@ public class Store {
     }
 
     /**
-     * Registers chunk.
+     * Registers a replica of a new chunk
      * @param fileID File identifier
      * @param chunkNo Chunk number
      * @param chunkSize Chunk size
      * @param replicaNo Replica number
      */
-    public static void registerChunk(String fileID, Integer chunkNo, Integer chunkSize, Integer replicaNo) {
+    public static void registerChunkReplica(String fileID, Integer chunkNo, Integer chunkSize, Integer replicaNo) {
 
         chunks.compute(fileID, (k1, v1) -> {
+
             if (v1 == null)
                 v1 = new ConcurrentHashMap<>();
 
@@ -68,13 +72,34 @@ public class Store {
         });
     }
 
+    /**
+     * Registers a replica of an existing chunk
+     * @param fileID File identifier
+     * @param chunkNo Chunk number
+     * @param replicaNo Replica number
+     */
+    public static void registerChunkReplica(String fileID, Integer chunkNo, Integer replicaNo) {
+
+        chunks.computeIfPresent(fileID, (k1, v1) -> {
+
+            v1.computeIfPresent(chunkNo, (k2, v2) -> {
+
+                v2.replicas.add(replicaNo);
+
+                return v2;
+            });
+
+            return v1;
+        });
+    }
+
    /**
-    * Unregister chunk.
+    * Unregister replica of an existing chunk
     * @param fileID File identifier
     * @param chunkNo Chunk number
     * @param replicaNo Replica number
     */
-   public static void unregisterChunk(String fileID, Integer chunkNo, Integer replicaNo) {
+   public static void unregisterChunkReplica(String fileID, Integer chunkNo, Integer replicaNo) {
 
        chunks.computeIfPresent(fileID, (k1, v1) -> {
 
@@ -110,6 +135,10 @@ public class Store {
         return chunks.containsKey(fileID) && chunks.get(fileID).containsKey(chunkNo);
     }
 
+    public static Boolean hasChunkReplica(String fileID, Integer chunkNo, Integer replicaNo) {
+        return hasChunk(fileID, chunkNo) && chunks.get(fileID).get(chunkNo).replicas.contains(replicaNo);
+    }
+
     /**
      * Checks if file is backed up.
      * @param fileID File identifier
@@ -136,51 +165,54 @@ public class Store {
         return null;
     }
 
-//    public static String debug() {
-//        StringBuilder sb = new StringBuilder();
-//
-//        sb.append("- Backed up files:\n");
-//
-//        for (Map.Entry<String, FileInfo> fileInfo : files.entrySet()) {
-//            sb.append("Path ").append(fileInfo.getValue().filePath).append("\n");
-//            sb.append("File ").append(fileInfo.getKey()).append("\n");
-////            System.out.println("Desired replication degree: " + fileInfo.getValue().replicationDegree);
-//            sb.append("Chunks (").append(fileInfo.getValue().chunks).append(" chunks):\n");
-//
-//            for (Map.Entry<Integer, ChunkInfo> chunk : chunks.get(fileInfo.getKey()).entrySet()) {
-//                sb.append("Chunk #").append(chunk.getKey()).append(" (").append(chunk.getValue().peers.size()).append(")\n");
-//            }
-//
-//            sb.append("\n");
-//        }
-//
-//        sb.append("- Stored chunks:\n");
-//
-//        for (Map.Entry<String, Map<Integer, ChunkInfo>> fileInfo : chunks.entrySet()) {
-//            for (Map.Entry<Integer, ChunkInfo> chunkInfo : fileInfo.getValue().entrySet()) {
-//                if (hasChunk(fileInfo.getKey(), chunkInfo.getKey(), ChordNode.instance().id())) {
-//                    sb.append("File ").append(fileInfo.getKey()).append(" chunk #").append(chunkInfo.getKey()).append(" ");
-////                    System.out.print("(" + chunkInfo.getValue().peers.size() + "/" + chunkInfo.getValue().replicationDegree + ") ");
-//                    sb.append(chunkInfo.getValue().size).append(" B");
-//                }
-//
-//                sb.append("\n");
-//            }
-//
-//            sb.append("\n");
-//        }
-//
-//        sb.append("Peer's capacity: ")
-//                .append(Peer.instance().currentDiskSpace.get())
-//                .append("/")
-//                .append(Peer.instance().maxDiskSpace.get())
-//                .append(" B\n");
-//
-//        return sb.toString();
-//    }
+    public static String debug() {
 
+        Utils.clearScreen();
 
+        StringBuilder sb = new StringBuilder();
 
+        if (files.size() > 0) {
+            sb.append("- Backed up files:\n");
 
+            for (Map.Entry<String, FileInfo> fileInfo : files.entrySet()) {
 
+                sb.append("File ")
+                        .append(fileInfo.getKey())
+                        .append("[").append(fileInfo.getValue().filePath).append("]")
+                        .append(" (").append(fileInfo.getValue().chunks).append(" chunks)")
+                        .append("\n");
+            }
+
+            sb.append("\n");
+        }
+
+        if (chunks.size() > 0) {
+            sb.append("- Stored chunks:\n");
+
+            for (Map.Entry<String, Map<Integer, ChunkInfo>> fileInfo : chunks.entrySet()) {
+
+                sb.append("File ").append(fileInfo.getKey()).append(":\n");
+
+                for (Map.Entry<Integer, ChunkInfo> chunkInfo : fileInfo.getValue().entrySet()) {
+
+                    sb.append("Chunk #")
+                            .append(chunkInfo.getKey())
+                            .append(" ")
+                            .append(chunkInfo.getValue().size).append(" B")
+                            .append(" (").append(Arrays.toString(chunkInfo.getValue().replicas.toArray())).append(")")
+                            .append("\n");
+                }
+
+                sb.append("\n");
+            }
+        }
+
+        sb.append("Peer's capacity: ")
+                .append(currentDiskSpace.get())
+                .append("/")
+                .append(maxDiskSpace.get())
+                .append(" B\n");
+
+        return sb.toString();
+    }
 }

@@ -2,6 +2,8 @@ package common.protocol;
 
 import common.Worker;
 import protocol.Protocol;
+import protocol.ProtocolHandler;
+import store.Store;
 import utils.Logger;
 
 public class ProtocolWorker extends Worker {
@@ -21,19 +23,20 @@ public class ProtocolWorker extends Worker {
             return;
 
         switch (request.type) {
-            case BACKUP:
-                Protocol.writeChunk(connection, request.fileID, request.chunkNo, request.chunk, request.i);
-                return;
-            case RESTORE:
+            case BACKUP_CHUNK:
+                Protocol.writeChunk(connection, request.fileID, request.chunkNo, request.chunk, request.replicaNo);
+                break;
+            case RESTORE_CHUNK:
                 Protocol.readChunk(connection, request.fileID, request.chunkNo);
-                return;
-            case DELETE:
+                break;
+            case DELETE_CHUNK:
                 connection.reply(Protocol.deleteChunk(request.fileID, request.chunkNo, -1));
-                return;
+                break;
+            case HAS_CHUNK:
+                connection.reply(Store.hasChunkReplica(request.fileID, request.chunkNo, request.replicaNo));
+                break;
             default:
                 Logger.severe("Protocol", "invalid request received");
         }
-
-        connection.reply(false);
     }
 }

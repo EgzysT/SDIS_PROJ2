@@ -64,35 +64,30 @@ public class Peer extends UnicastRemoteObject implements PeerService {
 
     @Override
     public void backup(String filePath) {
-        ProtocolHandler.schedule(
-                () -> Backup.backupFile(filePath),
-                0
+        ProtocolHandler.submit(
+                () -> Backup.backupFile(filePath)
         );
     }
 
     @Override
     public void restore(String filePath) {
-        ProtocolHandler.schedule(
-                () -> Restore.restoreFile(filePath),
-                0
+        ProtocolHandler.submit(
+                () -> Restore.restoreFile(filePath)
         );
     }
 
     @Override
     public void delete(String filePath) {
-       ProtocolHandler.schedule(
-               () -> Delete.deleteFile(filePath),
-               0
+       ProtocolHandler.submit(
+               () -> Delete.deleteFile(filePath)
        );
     }
 
     @Override
     public void reclaim(Integer maxSize) {
-        ProtocolHandler.schedule(
-                () -> Reclaim.reclaimSpace(maxSize),
-                0
+        ProtocolHandler.submit(
+                () -> Reclaim.reclaimSpace(maxSize)
         );
-
     }
 
     public static void main(String[] args) {

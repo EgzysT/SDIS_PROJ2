@@ -1,6 +1,6 @@
 package common.chord;
 
-import chord.ChordInfo;
+import chord.ChordHandler;
 import chord.ChordNode;
 import common.Worker;
 import utils.Logger;
@@ -15,7 +15,7 @@ class ChordWorker extends Worker {
 
     /**
      * Creates a new chord's worker
-     * @param connection core
+     * @param connection Connection
      */
     ChordWorker(ChordConnection connection) {
         this.connection = connection;
@@ -26,10 +26,8 @@ class ChordWorker extends Worker {
 
         ChordMessage request = connection.listen();
 
-        if (request == null) {
-            connection.reply((ChordInfo) null);
+        if (request == null)
             return;
-        }
 
         switch (request.type) {
             case CLOSEST_PRECEDING_NODE:
@@ -51,9 +49,10 @@ class ChordWorker extends Worker {
                 ChordNode.instance().notify(request.node);
                 break;
             case ALIVE:
+                connection.reply();
                 break;
             default:
-                Logger.severe("ChordHandler", "invalid request received");
+                Logger.severe("Chord", "invalid request received");
         }
     }
 }

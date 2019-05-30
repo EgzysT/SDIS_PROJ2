@@ -1,8 +1,7 @@
 package protocol;
 
-import chord.ChordInfo;
-import chord.ChordNode;
 import common.protocol.ProtocolConnection;
+import common.protocol.ProtocolMessage;
 import peer.Peer;
 import store.Store;
 import utils.Logger;
@@ -18,15 +17,25 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
+import static common.protocol.ProtocolMessage.Type.*;
 import static java.nio.file.StandardOpenOption.*;
 
 public abstract class Protocol {
 
-    public static void writeChunk(ProtocolConnection connection, String fileID, Integer chunkNo, byte[] chunk, Integer i) {
+    /**
+     * Writes chunk to disk
+     * @param connection Connection
+     * @param fileID File identifier
+     * @param chunkNo Chunk number
+     * @param chunk Chunk
+     * @param replicaNo Replica number
+     */
+    public static void writeChunk(ProtocolConnection connection, String fileID, Integer chunkNo, byte[] chunk, Integer replicaNo) {
 
         // Check if peer has chunk
+        // Register replica
         if (Store.hasChunk(fileID, chunkNo)) {
-//            Logger.fine("Store", "peer already has chunk #" + chunkNo + " from file " + fileID);
+            Store.registerChunkReplica(fileID, chunkNo, replicaNo);
             connection.reply(true);
             return;
         }
@@ -58,7 +67,7 @@ public abstract class Protocol {
                         System.exit(-1);
                     }
 
-                    Store.registerChunk(fileID, chunkNo, result, i);
+                    Store.registerChunkReplica(fileID, chunkNo, result, replicaNo);
 
                     connection.reply(true);
                 }
@@ -75,7 +84,7 @@ public abstract class Protocol {
     }
 
     /**
-     * Reads chunk
+     * Reads chunk from disk
      * @param fileID File identifier
      * @param chunkNo Chunk number
      * @return Chunk
@@ -84,7 +93,6 @@ public abstract class Protocol {
 
         // Check if peer has chunk
         if (!Store.hasChunk(fileID, chunkNo)) {
-//            Logger.fine("Store", "peer does not have chunk #" + chunkNo + " from file " + fileID + " stored");
             connection.reply((byte[]) null);
             return;
         }
@@ -97,6 +105,14 @@ public abstract class Protocol {
             fileChannel.read(buffer, 0, buffer, new CompletionHandler<Integer, ByteBuffer>() {
                 @Override
                 public void completed(Integer result, ByteBuffer attachment) {
+
+                    try {
+                        fileChannel.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        System.exit(-1);
+                    }
+
 
                     attachment.flip();
 
@@ -117,15 +133,18 @@ public abstract class Protocol {
         }
     }
 
-    public static Boolean transferChunk(InetSocketAddress node, String fileID, Integer chunkNo, Integer i) {
-
-        // TODO add to instances?? to prevent other protocols from interfering
+    /**
+     * Transfer chunk
+     * @param node Receiver's node
+     * @param fileID File identifier
+     * @param chunkNo Chunk number
+     * @param replicaNo Replica number
+     */
+    public static void transferChunk(InetSocketAddress node, String fileID, Integer chunkNo, Integer replicaNo) {
 
         // Check if peer has chunk
-        if (!Store.hasChunk(fileID, chunkNo)) {
-            Logger.fine("Store", "peer does not have chunk #" + chunkNo + " from file " + fileID + " stored");
-            return false;
-        }
+        if (!Store.hasChunk(fileID, chunkNo))
+            return;
 
         try {
             Path path = Paths.get(Peer.instance().backupDir + File.separator + fileID + File.separator + chunkNo + ".chunk");
@@ -137,18 +156,26 @@ public abstract class Protocol {
                 @Override
                 public void completed(Integer result, ByteBuffer attachment) {
 
+                    try {
+                        fileChannel.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        System.exit(-1);
+                    }
+
                     attachment.flip();
 
-                    new ProtocolConnection(node).backupChunk(
+                     ProtocolMessage reply = new ProtocolConnection(node).backupChunk(
                             fileID,
                             chunkNo,
                             Arrays.copyOfRange(attachment.array(), 0, attachment.remaining()),
-                            i
+                            replicaNo
                     );
 
                     attachment.clear();
 
-                    deleteChunk(fileID, chunkNo, i);
+                    if (reply != null && reply.type == ACK)
+                        deleteChunk(fileID, chunkNo, replicaNo);
                 }
 
                 @Override
@@ -161,19 +188,17 @@ public abstract class Protocol {
             e.printStackTrace();
             System.exit(-1);
         }
-
-        return true;
     }
 
     /**
-     * Deletes chunk.
+     * Deletes chunk
      * @param fileID File identifier
      * @param chunkNo Chunk number
      * @return True if deleted, false otherwise
      */
-    public static Boolean deleteChunk(String fileID, Integer chunkNo, Integer i) {
+    public static Boolean deleteChunk(String fileID, Integer chunkNo, Integer replicaNo) {
 
-        Store.unregisterChunk(fileID, chunkNo, i);
+        Store.unregisterChunkReplica(fileID, chunkNo, replicaNo);
 
         if (!Store.hasChunk(fileID, chunkNo)) {
 

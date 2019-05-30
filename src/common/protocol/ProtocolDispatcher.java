@@ -2,6 +2,7 @@ package common.protocol;
 
 import chord.ChordNode;
 import common.Dispatcher;
+import protocol.ProtocolHandler;
 import utils.Logger;
 
 import javax.net.ssl.SSLSocket;
@@ -28,7 +29,7 @@ public class ProtocolDispatcher extends Dispatcher {
     @Override
     public void awaitConnection() throws IOException {
         ProtocolConnection connection = new ProtocolConnection((SSLSocket) server.accept());
-        executor.submit(new ProtocolWorker(connection));
+        ProtocolHandler.submit(new ProtocolWorker(connection));
     }
 }
 

@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Protocol handler
  */
-public class ProtocolHandler {
+public abstract class ProtocolHandler {
 
     /** Protocol's executor */
     private static ScheduledExecutorService executor;
@@ -16,19 +16,12 @@ public class ProtocolHandler {
         executor = Executors.newScheduledThreadPool(4);
     }
 
-    private ProtocolHandler() {}
-
     /**
-     * Schedules a task using an executor
-     * @param task Task
-     * @param delay Task's delay (in milliseconds)
+     * Submits a task
+     * @param task task
      */
-    public static void schedule(Runnable task, Integer delay) {
-        executor.schedule(
-                task,
-                delay,
-                TimeUnit.MILLISECONDS
-        );
+    public static void submit(Runnable task) {
+        executor.submit(task);
     }
 
     /**
@@ -36,7 +29,7 @@ public class ProtocolHandler {
      * @param fileID fileID
      * @return True if file is busy, false otherwise.
      */
-    static boolean isFileBusy(String fileID) {
+    public static boolean isFileBusy(String fileID) {
         return Backup.instances.containsKey(fileID) || Restore.instances.containsKey(fileID) ||
                 Delete.instances.containsKey(fileID) || Reclaim.instance.get();
     }
@@ -45,7 +38,7 @@ public class ProtocolHandler {
      * Checks if peer is running any protocol instance.
      * @return True if is free, false otherwise.
      */
-    static boolean isPeerFree() {
+    public static boolean isPeerFree() {
         return Backup.instances.isEmpty() ||
                 Restore.instances.isEmpty() || Delete.instances.isEmpty() || !Reclaim.instance.get();
     }
