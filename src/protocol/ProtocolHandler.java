@@ -1,7 +1,11 @@
 package protocol;
 
 import chord.ChordNode;
+import store.ChunkInfo;
+import store.Store;
+import utils.Logger;
 
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -60,5 +64,21 @@ public abstract class ProtocolHandler {
         }
 
         return false;
+    }
+
+    public static void syncFiles() {
+
+        System.out.println("syncing");
+
+        for (Map.Entry<String, Map<Integer, ChunkInfo>> file : Store.chunks.entrySet()) {
+
+            if (ProtocolHandler.isFileBackedUp(file.getKey()))
+                continue;
+
+            for (Map.Entry<Integer, ChunkInfo> chunk : file.getValue().entrySet()) {
+                Protocol.deleteChunk(file.getKey(), chunk.getKey(), -1);
+                Logger.fine("Protocol", "deleting old chunk");
+            }
+        }
     }
 }

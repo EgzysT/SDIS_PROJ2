@@ -193,6 +193,7 @@ public abstract class Protocol {
      * Deletes chunk
      * @param fileID File identifier
      * @param chunkNo Chunk number
+     * @param replicaNo Replica number (-1 for all replicas)
      * @return True if deleted, false otherwise
      */
     public static Boolean deleteChunk(String fileID, Integer chunkNo, Integer replicaNo) {

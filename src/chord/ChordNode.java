@@ -6,6 +6,7 @@ import common.protocol.ProtocolConnection;
 import common.protocol.ProtocolDispatcher;
 import common.protocol.ProtocolMessage;
 import protocol.Protocol;
+import protocol.ProtocolHandler;
 import store.ChunkInfo;
 import store.Store;
 import utils.Logger;
@@ -78,7 +79,9 @@ public class ChordNode implements ChordService {
     /**
      * Initializes node's threads
      */
-    private void initThreads() {
+    public void initThreads() {
+
+        ProtocolHandler.syncFiles();
 
         try {
             // Chord's dispatcher
@@ -417,7 +420,7 @@ public class ChordNode implements ChordService {
             Logger.info("Chord", "starting new ring with node " + info.identifier + " at " + info.chordAddress);
         }
 
-        initThreads();
+//        initThreads();
     }
 
     @Override

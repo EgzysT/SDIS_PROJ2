@@ -85,10 +85,10 @@ public abstract class Store {
     }
 
    /**
-    * Unregister replica of an existing chunk
+    * Unregisters replica of an existing chunk
     * @param fileID File identifier
     * @param chunkNo Chunk number
-    * @param replicaNo Replica number
+    * @param replicaNo Replica number (-1 for all replicas)
     */
    public static void unregisterChunkReplica(String fileID, Integer chunkNo, Integer replicaNo) {
 

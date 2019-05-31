@@ -58,6 +58,8 @@ public class Peer extends UnicastRemoteObject implements PeerService {
         // Import store
         Store.importStore();
 
+        ChordNode.instance().initThreads();
+
         try {
             Naming.rebind(accessPoint, this);
         } catch (Exception e) {

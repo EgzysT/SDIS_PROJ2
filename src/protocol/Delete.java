@@ -60,10 +60,12 @@ public abstract class Delete {
 		int chunkNo = 0;
 
 		do {
-			if (ChordNode.instance().remove(fileID, chunkNo++))
+			if (ChordNode.instance().remove(fileID, chunkNo))
 				Logger.fine("Delete", "deleted chunk #" + chunkNo + " from file " + fileID);
 			else
 				stop = true;
+
+			chunkNo++;
 
 		} while (!stop);
 
