@@ -1,7 +1,6 @@
 package protocol;
 
 import chord.ChordNode;
-import store.Store;
 import utils.Logger;
 import utils.Utils;
 
@@ -23,17 +22,22 @@ import static java.nio.file.StandardOpenOption.*;
  */
 public abstract class Backup {
 
+    /** Backup instances */
     static Map<String, Boolean> instances;
 
     static {
         instances = new ConcurrentHashMap<>();
     }
 
-    private static Boolean checkRequirements(String filePath, String fileID) {
+    /**
+     * Checks requirements before backup
+     * @param fileID File identifier
+     * @return True if all requirements are met, false otherwise
+     */
+    private static Boolean checkRequirements(String fileID) {
 
-        // TODO node may not have backed up file or chunk
         // Check if file is backed up
-        if (Store.isBackedUp(fileID)) {
+        if (ProtocolHandler.isFileBackedUp(fileID)) {
             Logger.warning("Backup", "file " + fileID + " is already backed up");
             return false;
         }
@@ -44,15 +48,13 @@ public abstract class Backup {
             return false;
         }
 
-        // Check if file is modified
-        if (Store.getFileID(filePath) != null) {
-            Logger.warning("Backup", "deleting old version of file " + filePath);
-            Delete.deleteFile(filePath);
-        }
-
         return true;
     }
 
+    /**
+     * Backup file
+     * @param filePath File path
+     */
     public static void backupFile(String filePath) {
 
         // Check if file exists
@@ -63,7 +65,7 @@ public abstract class Backup {
 
         String fileID = Utils.generateFileID(filePath);
 
-        if (!checkRequirements(filePath, fileID))
+        if (!checkRequirements(fileID))
             return;
 
         if (instances.putIfAbsent(fileID, true) != null) {
@@ -98,21 +100,28 @@ public abstract class Backup {
                         try {
                             fileChannel.close();
                         } catch (IOException e) {
-                            Logger.severe("Backup", "failed to close file channel");
+                            e.printStackTrace();
+                            System.exit(-1);
                         }
 
                         if (fileSize % 64000 == 0) {
 
-                            ChordNode.instance().put(
+                            boolean status = ChordNode.instance().put(
                                     fileID,
                                     chunkNo,
                                     new byte[0]
                             );
 
+                            if (!status) {
+                                instances.computeIfPresent(fileID, (k,v) -> null);
+                                Logger.warning("Backup", "failed to backup chunk #" + chunkNo + " from file " + fileID);
+                                return;
+                            }
+
+                            Logger.fine("Backup", "backed up chunk #" + chunkNo + " from file " + fileID);
+
                             chunkNo++;
                         }
-
-                        Store.registerFile(fileID, filePath, chunkNo);
 
                         instances.computeIfPresent(fileID, (k,v) -> null);
 
@@ -123,11 +132,18 @@ public abstract class Backup {
 
                     attachment.flip();
 
-                    ChordNode.instance().put(
-                            fileID,
-                            chunkNo,
+                    boolean status = ChordNode.instance().put(
+                            fileID, chunkNo,
                             Arrays.copyOfRange(attachment.array(), 0, attachment.remaining())
                     );
+
+                    if (!status) {
+                        instances.computeIfPresent(fileID, (k,v) -> null);
+                        Logger.warning("Backup", "failed to backup chunk #" + chunkNo + " from file " + fileID);
+                        return;
+                    }
+
+                    Logger.fine("Backup", "backed up chunk #" + chunkNo + " from file " + fileID);
 
                     attachment.clear();
 
@@ -139,12 +155,14 @@ public abstract class Backup {
 
                 @Override
                 public void failed(Throwable exc, ByteBuffer attachment) {
-                    Logger.severe("Backup", "failed to read chunk");
+                    exc.printStackTrace();
+                    System.exit(-1);
                 }
             });
 
         } catch (IOException e) {
-            Logger.severe("Backup", "failed to read chunk");
+            e.printStackTrace();
+            System.exit(-1);
         }
     }
 }

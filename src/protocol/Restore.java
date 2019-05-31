@@ -2,8 +2,8 @@ package protocol;
 
 import chord.ChordNode;
 import peer.Peer;
-import store.Store;
 import utils.Logger;
+import utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,17 +22,23 @@ import static java.nio.file.StandardOpenOption.*;
  */
 public abstract class Restore {
 
+    /** Restore instances */
     static Map<String , Boolean> instances;
 
     static {
         instances = new ConcurrentHashMap<>();
     }
 
-    private static Boolean checkRequirements(String filePath, String fileID) {
+    /**
+     * Checks requirements before restore
+     * @param fileID File identifier
+     * @return True if all requirements are met, false otherwise
+     */
+    private static Boolean checkRequirements(String fileID) {
 
         // Check if file is backed up
-        if (fileID == null) {
-            Logger.fine("Restore", "file " + filePath + " is not backed up");
+        if (!ProtocolHandler.isFileBackedUp(fileID)) {
+            Logger.warning("Restore", "file " + fileID + " is not backed up");
             return false;
         }
 
@@ -45,11 +51,15 @@ public abstract class Restore {
         return true;
     }
 
+    /**
+     * Restore file
+     * @param filePath File path
+     */
     public static void restoreFile(String filePath) {
 
-        String fileID = Store.getFileID(filePath);
+        String fileID = Utils.generateFileID(filePath);
 
-        if (!checkRequirements(filePath, fileID))
+        if (!checkRequirements(fileID))
             return;
 
         if (instances.putIfAbsent(fileID, true) != null) {
@@ -65,6 +75,8 @@ public abstract class Restore {
             Logger.warning("Restore", "failed to restore chunk #0 from file " + fileID);
             return;
         }
+
+        Logger.fine("Restore", "restored chunk #0 from file " + fileID);
 
         try {
             Path path = Paths.get(Peer.instance().restoreDir + File.separator + Paths.get(filePath).getFileName());
@@ -84,12 +96,13 @@ public abstract class Restore {
 
                     chunkNo++;
 
-                    if (Store.files.get(fileID).chunks.equals(chunkNo)) {
+                    if (result < 64000) {
 
                         try {
                             fileChannel.close();
                         } catch (IOException e) {
-                            Logger.severe("Restore", "failed to close file channel");
+                            e.printStackTrace();
+                            System.exit(-1);
                         }
 
                         instances.computeIfPresent(fileID, (k,v) -> null);
@@ -107,6 +120,8 @@ public abstract class Restore {
                         return;
                     }
 
+                    Logger.fine("Restore", "restored chunk #" + chunkNo + " from file " + fileID);
+
                     attachment = ByteBuffer.wrap(chunk);
 
                     fileChannel.write(attachment, chunkNo * 64000, attachment, this);
@@ -114,12 +129,14 @@ public abstract class Restore {
 
                 @Override
                 public void failed(Throwable exc, ByteBuffer attachment) {
-                    Logger.severe("Backup", "failed to write chunk");
+                    exc.printStackTrace();
+                    System.exit(-1);
                 }
             });
 
         } catch (IOException e) {
-            Logger.severe("Backup", "failed to write chunk");
+            e.printStackTrace();
+            System.exit(-1);
         }
     }
 }

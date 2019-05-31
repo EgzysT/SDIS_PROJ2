@@ -27,7 +27,7 @@ public interface ChordService {
      * @param chunkNo Chunk number
      * @param chunk Chunk data
      */
-    void put(String fileID, Integer chunkNo, byte[] chunk);
+    boolean put(String fileID, Integer chunkNo, byte[] chunk);
 
     /**
      * Gets a value from the DHT
@@ -42,5 +42,5 @@ public interface ChordService {
      * @param fileID File identifier
      * @param chunkNo Chunk number
      */
-    void remove(String fileID, Integer chunkNo);
+    boolean remove(String fileID, Integer chunkNo);
 }

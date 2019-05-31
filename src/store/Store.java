@@ -1,14 +1,12 @@
 package store;
 
 import chord.ChordHandler;
-import chord.ChordNode;
 import peer.Peer;
 import utils.Logger;
 import utils.Utils;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -16,35 +14,23 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Store
+ */
 public abstract class Store {
 
-    public static Map<String, FileInfo> files;
+    /** Chunks backed up by this node */
     public static Map<String, Map<Integer, ChunkInfo>> chunks;
+
+    /**
+     * Current disk space and max disk space
+     */
     public static AtomicInteger currentDiskSpace, maxDiskSpace;
 
     static {
-        files = new ConcurrentHashMap<>();
         chunks = new ConcurrentHashMap<>();
-
         currentDiskSpace = new AtomicInteger(0);
         maxDiskSpace = new AtomicInteger(Integer.MAX_VALUE);
-    }
-
-    /**
-     * Registers a file.
-     * @param fileID File identifier
-     * @param filePath File path
-     */
-    public static void registerFile(String fileID, String filePath, Integer nrChunks) {
-        files.putIfAbsent(fileID, new FileInfo(filePath, nrChunks));
-    }
-
-    /**
-     * Unregisters a file.
-     * @param fileID File identifier
-     */
-    public static void unregisterFile(String fileID) {
-        files.remove(fileID);
     }
 
     /**
@@ -152,31 +138,9 @@ public abstract class Store {
     }
 
     /**
-     * Checks if file is backed up
-     * @param fileID File identifier
-     * @return True if file is backed up, false otherwise
+     * Imports store, if available
      */
-    public static Boolean isBackedUp(String fileID) {
-        return files.containsKey(fileID) || chunks.containsKey(fileID);
-    }
-
-    /**
-     * Returns file identifier from file path
-     * @param filePath File path
-     * @return File identifier corresponding file path
-     */
-    public static String getFileID(String filePath) {
-
-        Path fileName = Paths.get(filePath).getFileName();
-
-        for (Map.Entry<String, FileInfo> fileInfo : files.entrySet()) {
-            if (Paths.get(fileInfo.getValue().filePath).getFileName().equals(fileName))
-                return fileInfo.getKey();
-        }
-
-        return null;
-    }
-
+    @SuppressWarnings("unchecked")
     public static void importStore() {
 
         try {
@@ -189,9 +153,9 @@ public abstract class Store {
 
                 ObjectInputStream in = new ObjectInputStream(file);
 
+
                 HashMap<String, Object> objects = (HashMap<String, Object>) in.readObject();
 
-                files = (Map<String, FileInfo>) objects.get("files");
                 chunks = (Map<String, Map<Integer, ChunkInfo>>) objects.get("chunks");
                 currentDiskSpace = (AtomicInteger) objects.get("currentDiskSpace");
                 maxDiskSpace = (AtomicInteger) objects.get("maxDiskSpace");
@@ -213,7 +177,9 @@ public abstract class Store {
         );
     }
 
-
+    /**
+     * Exports store, if available
+     */
     public static void exportStore() {
 
         try {
@@ -224,7 +190,7 @@ public abstract class Store {
             ObjectOutputStream out = new ObjectOutputStream(file);
 
             HashMap<String, Object> objects = new HashMap<>();
-            objects.put("files", Store.files);
+
             objects.put("chunks", Store.chunks);
             objects.put("currentDiskSpace", Store.currentDiskSpace);
             objects.put("maxDiskSpace", Store.maxDiskSpace);
@@ -253,21 +219,6 @@ public abstract class Store {
         Utils.clearScreen();
 
         StringBuilder sb = new StringBuilder();
-
-        if (files.size() > 0) {
-            sb.append("- Backed up files:\n");
-
-            for (Map.Entry<String, FileInfo> fileInfo : files.entrySet()) {
-
-                sb.append("File ")
-                        .append(fileInfo.getKey())
-                        .append("[").append(fileInfo.getValue().filePath).append("]")
-                        .append(" (").append(fileInfo.getValue().chunks).append(" chunks)")
-                        .append("\n");
-            }
-
-            sb.append("\n");
-        }
 
         if (chunks.size() > 0) {
             sb.append("- Stored chunks:\n");

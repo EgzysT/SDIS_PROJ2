@@ -4,11 +4,17 @@ import store.ChunkInfo;
 import store.Store;
 import utils.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * Reclaim protocol
+ */
 public abstract class Reclaim {
 
+    /** Reclaim instance */
     static AtomicBoolean instance;
 
     static {
@@ -27,6 +33,7 @@ public abstract class Reclaim {
         Store.maxDiskSpace.set(newSize);
 
         if (Store.currentDiskSpace.get() < Store.maxDiskSpace.get()) {
+            instance.set(false);
             Logger.fine("Reclaim", "no need to reclaim disk space");
             return;
         }
@@ -35,10 +42,14 @@ public abstract class Reclaim {
 
         for (Map.Entry<String, Map<Integer, ChunkInfo>> file : Store.chunks.entrySet()) {
 
+            // Order file's chunks by number of replicas
+            List<Map.Entry<Integer, ChunkInfo>> fileChunks = new ArrayList<>(file.getValue().entrySet());
+            fileChunks.sort((o1, o2) -> o1.getValue().replicas.size() < o2.getValue().replicas.size() ? -1 : 1);
+
             if (stop)
                 break;
 
-            for (Map.Entry<Integer, ChunkInfo> chunk : file.getValue().entrySet()) {
+            for (Map.Entry<Integer, ChunkInfo> chunk : fileChunks) {
 
                 Protocol.deleteChunk(file.getKey(), chunk.getKey(), -1);
 

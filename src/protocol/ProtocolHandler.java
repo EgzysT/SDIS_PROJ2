@@ -1,5 +1,7 @@
 package protocol;
 
+import chord.ChordNode;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -40,5 +42,23 @@ public abstract class ProtocolHandler {
     public static boolean isPeerFree() {
         return Backup.instances.isEmpty() ||
                 Restore.instances.isEmpty() || Delete.instances.isEmpty() || !Reclaim.instance.get();
+    }
+
+    /**
+     * Checks up to 5 chunks to see if file is backed up
+     * @param fileID File identifier
+     * @return True if file is backed up, false otherwise
+     */
+    public static boolean isFileBackedUp(String fileID) {
+
+        for (int chunkNo = 0; chunkNo < 5; chunkNo++) {
+
+            byte[] chunk = ChordNode.instance().get(fileID, chunkNo);
+
+            if (chunk != null)
+                return true;
+        }
+
+        return false;
     }
 }

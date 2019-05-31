@@ -87,7 +87,6 @@ public abstract class Protocol {
      * Reads chunk from disk
      * @param fileID File identifier
      * @param chunkNo Chunk number
-     * @return Chunk
      */
     public static void readChunk(ProtocolConnection connection, String fileID, Integer chunkNo) {
 

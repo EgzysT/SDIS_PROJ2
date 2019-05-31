@@ -1,10 +1,8 @@
 package utils;
 
 import java.math.BigInteger;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -44,8 +42,7 @@ public abstract class Utils {
 
         try {
             Path p = Paths.get(filePath);
-            BasicFileAttributes view = Files.readAttributes(p, BasicFileAttributes.class);
-            String metadata = p.getFileName().toString() + view.lastModifiedTime().toString();
+            String metadata = p.getFileName().toString();
 
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(metadata.getBytes());

@@ -81,7 +81,7 @@ public class ChordNode implements ChordService {
     private void initThreads() {
 
         try {
-            // Chord's Dispatcher
+            // Chord's dispatcher
             new Thread(
                     new ChordDispatcher(info.chordAddress.getPort())
             ).start();
@@ -410,13 +410,10 @@ public class ChordNode implements ChordService {
             }
 
             successor(new ChordConnection(superAddr).findSuccessor(info.identifier));
-
             Logger.info("Chord", "starting node " + info.identifier + " at " + info.chordAddress);
 
         } else {
-
             successor(info);
-
             Logger.info("Chord", "starting new ring with node " + info.identifier + " at " + info.chordAddress);
         }
 
@@ -429,7 +426,9 @@ public class ChordNode implements ChordService {
     }
 
     @Override
-    public void put(String fileID, Integer chunkNo, byte[] chunk) {
+    public boolean put(String fileID, Integer chunkNo, byte[] chunk) {
+
+        boolean success = false;
 
         for (int replicaNo = 0; replicaNo < ChordHandler.repDeg; replicaNo++) {
 
@@ -438,12 +437,13 @@ public class ChordNode implements ChordService {
             ProtocolMessage reply = new ProtocolConnection(n.protocolAddress).backupChunk(fileID, chunkNo, chunk, replicaNo);
 
             // Repeat if there was an error in connection, ignore if received NACK
-            if (reply == null) {
+            if (reply == null)
                 replicaNo--;
-            } else if (reply.type == ACK) {
-                Logger.fine("Chord", "node " + n.identifier + " stored chunk #" + chunkNo + " from file " + fileID);
-            }
+            else if (reply.type == ACK)
+                success = true;
         }
+
+        return success;
     }
 
     @Override
@@ -456,19 +456,19 @@ public class ChordNode implements ChordService {
             ProtocolMessage reply = new ProtocolConnection(n.protocolAddress).restoreChunk(fileID, chunkNo);
 
             // Repeat if there was an error in connection, ignore if received NACK
-            if (reply == null) {
+            if (reply == null)
                 i--;
-            } else if (reply.type == ACK) {
-                Logger.fine("Chord", "node " + n.identifier + " restored chunk #" + chunkNo + " from file " + fileID);
+            else if (reply.type == ACK)
                 return reply.chunk;
-            }
         }
 
         return null;
     }
 
     @Override
-    public void remove(String fileID, Integer chunkNo) {
+    public boolean remove(String fileID, Integer chunkNo) {
+
+        boolean success = false;
 
         for (int i = 0; i < ChordHandler.repDeg; i++) {
 
@@ -477,12 +477,13 @@ public class ChordNode implements ChordService {
             ProtocolMessage reply = new ProtocolConnection(n.protocolAddress).deleteChunk(fileID, chunkNo);
 
             // Repeat if there was an error in connection, ignore if received NACK
-            if (reply == null) {
+            if (reply == null)
                 i--;
-            } else if (reply.type == ACK) {
-                Logger.fine("Chord", "node " + n.identifier + " deleted chunk #" + chunkNo + " of file " + fileID);
-            }
+            else if (reply.type == ACK)
+                success = true;
         }
+
+        return success;
     }
 
     public String debug() {

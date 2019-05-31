@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import chord.ChordNode;
 import store.Store;
 import utils.Logger;
+import utils.Utils;
 
 /**
  * Delete protocol
@@ -17,12 +18,16 @@ public abstract class Delete {
     static {
         instances = new ConcurrentHashMap<>();
 	}
-	
-	private static boolean checkRequirements(String filePath, String fileID) {
 
-		// Check if file is backed up
-		if (fileID == null) {
-			Logger.warning("Delete", "file " + filePath + " is not backed up");
+	/**
+	 * Checks requirements before delete
+	 * @param fileID File identifier
+	 * @return True if all requirements are met, false otherwise
+	 */
+	private static boolean checkRequirements(String fileID) {
+
+		if (!ProtocolHandler.isFileBackedUp(fileID)) {
+			Logger.warning("Delete", "file " + fileID + " is not backed up");
 			return false;
 		}
 
@@ -37,9 +42,9 @@ public abstract class Delete {
 
 	public static void deleteFile(String filePath) {
 
-		String fileID = Store.getFileID(filePath);
+		String fileID = Utils.generateFileID(filePath);
 
-		if (!checkRequirements(filePath, fileID))
+		if (!checkRequirements(fileID))
             return;
 
 		if (instances.putIfAbsent(fileID, true) != null) {
@@ -47,13 +52,23 @@ public abstract class Delete {
             return;
         }
 
-		for (int chunkNo = 0; chunkNo < Store.files.get(fileID).chunks; chunkNo++) {
-			ChordNode.instance().remove(fileID, chunkNo);
-		}
+//		for (int chunkNo = 0; chunkNo < Store.files.get(fileID).chunks; chunkNo++) {
+//			ChordNode.instance().remove(fileID, chunkNo);
+//		}
+
+		boolean stop = false;
+		int chunkNo = 0;
+
+		do {
+			if (ChordNode.instance().remove(fileID, chunkNo++))
+				Logger.fine("Delete", "deleted chunk #" + chunkNo + " from file " + fileID);
+			else
+				stop = true;
+
+		} while (!stop);
 
 		// TODO if a dead node comes back with store, send check messages
-
-		Store.unregisterFile(fileID);
+		// TODO add enhancement (sync store)
 
 		instances.computeIfPresent(fileID, (k,v) -> null);
 
