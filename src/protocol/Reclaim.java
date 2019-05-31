@@ -21,6 +21,10 @@ public abstract class Reclaim {
         instance = new AtomicBoolean(false);
     }
 
+    /**
+     * Reclaim space
+     * @param newSize New max disk space
+     */
     public static void reclaimSpace(Integer newSize) {
 
         if (!ProtocolHandler.isPeerFree()) {
@@ -42,7 +46,7 @@ public abstract class Reclaim {
 
         for (Map.Entry<String, Map<Integer, ChunkInfo>> file : Store.chunks.entrySet()) {
 
-            // Order file's chunks by number of replicas
+            // Order file's chunks by number of replicas (delete chunks with less replicas first)
             List<Map.Entry<Integer, ChunkInfo>> fileChunks = new ArrayList<>(file.getValue().entrySet());
             fileChunks.sort((o1, o2) -> o1.getValue().replicas.size() < o2.getValue().replicas.size() ? -1 : 1);
 

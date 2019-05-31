@@ -12,8 +12,14 @@ public class ChunkInfo implements Serializable {
 
     /** Size */
     public Integer size;
+
+    /** Replicas */
     public HashSet<Integer> replicas;
 
+    /**
+     * Chunk info
+     * @param size Size
+     */
     public ChunkInfo(Integer size) {
         this.size = size;
         this.replicas = new HashSet<>();

@@ -13,15 +13,28 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
+/**
+ * Peer
+ */
 public class Peer extends UnicastRemoteObject implements PeerService {
 
+    /** Singleton instance */
     private static Peer instance;
+
+    /** Home, backup and restore directory */
     public Path homeDir, backupDir, restoreDir;
 
+    /**
+     * Peer constructor
+     */
     private Peer() throws RemoteException {
         super(0);
     }
 
+    /**
+     * Creates a new peer's instance, if necessary, and returns it
+     * @return Peer's instance
+     */
     public static Peer instance() {
         if (instance == null) {
             try {
@@ -35,6 +48,12 @@ public class Peer extends UnicastRemoteObject implements PeerService {
         return instance;
     }
 
+    /**
+     * Starts peer
+     * @param accessPoint Access point
+     * @param nodeAddr Node address
+     * @param superAddr Super node address
+     */
     private void start(String accessPoint, InetSocketAddress nodeAddr, InetSocketAddress superAddr) {
 
         ChordNode.instance().join(nodeAddr, superAddr);
@@ -58,7 +77,7 @@ public class Peer extends UnicastRemoteObject implements PeerService {
         // Import store
         Store.importStore();
 
-        ChordNode.instance().initThreads();
+        ChordNode.instance().startService();
 
         try {
             Naming.rebind(accessPoint, this);
@@ -94,6 +113,16 @@ public class Peer extends UnicastRemoteObject implements PeerService {
         ProtocolHandler.submit(
                 () -> Reclaim.reclaimSpace(maxSize)
         );
+    }
+
+    @Override
+    public void chord_state() {
+        System.out.println(ChordNode.instance().debug());
+    }
+
+    @Override
+    public void store_state() {
+        System.out.println(Store.debug());
     }
 
     public static void main(String[] args) {

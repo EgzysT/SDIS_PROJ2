@@ -5,7 +5,7 @@ import java.math.BigInteger;
 import java.net.InetSocketAddress;
 
 /**
- * Node's info
+ * Chord node's info
  */
 public class ChordInfo implements Serializable {
 
@@ -30,6 +30,10 @@ public class ChordInfo implements Serializable {
         protocolAddress = protocolAddr;
     }
 
+    /**
+     * Sets selected port
+     * @param port Port selected by OS
+     */
     public void setProtocolPort(Integer port) {
         protocolAddress = new InetSocketAddress(chordAddress.getHostName(), port);
     }

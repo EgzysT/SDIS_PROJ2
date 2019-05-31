@@ -35,4 +35,16 @@ public interface PeerService extends Remote {
       * @throws RemoteException
       */
      void reclaim(Integer maxSize) throws RemoteException;
+
+    /**
+     * Shows Chord state
+     * @throws RemoteException
+     */
+     void chord_state() throws RemoteException;
+
+    /**
+     * Shows store state
+     * @throws RemoteException
+     */
+     void store_state() throws RemoteException;
 }

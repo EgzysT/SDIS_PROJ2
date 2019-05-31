@@ -13,14 +13,14 @@ import java.io.IOException;
 public class ChordDispatcher extends Dispatcher {
 
     /**
-     * Creates a new chord's dispatcher
+     * Creates a new Chord's dispatcher
      * @param port Port
      * @throws IOException
      */
     public ChordDispatcher(Integer port) throws IOException {
         super(port);
 
-        Logger.info("Dispatcher", "started chord dispatcher at " + server.getLocalPort());
+        Logger.info("Chord", "started dispatcher at " + server.getLocalPort());
     }
 
     @Override

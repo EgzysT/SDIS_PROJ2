@@ -2,6 +2,8 @@ package store;
 
 import chord.ChordHandler;
 import peer.Peer;
+import protocol.Protocol;
+import protocol.ProtocolHandler;
 import utils.Logger;
 import utils.Utils;
 
@@ -22,9 +24,7 @@ public abstract class Store {
     /** Chunks backed up by this node */
     public static Map<String, Map<Integer, ChunkInfo>> chunks;
 
-    /**
-     * Current disk space and max disk space
-     */
+    /** Current disk space and max disk space */
     public static AtomicInteger currentDiskSpace, maxDiskSpace;
 
     static {
@@ -163,13 +163,16 @@ public abstract class Store {
                 in.close();
                 file.close();
 
-                Logger.fine("Chord", "imported store");
+                Logger.fine("Store", "imported store");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(-1);
         }
+
+        // Sync store
+        syncStore();
 
         ChordHandler.schedule(
                 Store::exportStore,
@@ -206,7 +209,7 @@ public abstract class Store {
             System.exit(-1);
         }
 
-        Logger.fine("Chord", "exported store");
+        Logger.fine("Store", "exported store");
 
         ChordHandler.schedule(
                 Store::exportStore,
@@ -214,11 +217,33 @@ public abstract class Store {
         );
     }
 
+    /**
+     * Syncs store's files with other peers
+     */
+    public static void syncStore() {
+
+        Logger.fine("Store", "syncing files");
+
+        for (Map.Entry<String, Map<Integer, ChunkInfo>> file : Store.chunks.entrySet()) {
+
+            if (ProtocolHandler.isFileBackedUp(file.getKey()))
+                continue;
+
+            for (Map.Entry<Integer, ChunkInfo> chunk : file.getValue().entrySet()) {
+                Protocol.deleteChunk(file.getKey(), chunk.getKey(), -1);
+                Logger.fine("Store", "deleting chunk #" + chunk.getKey() + " from file " + file.getKey());
+            }
+        }
+    }
+
+    /**
+     * Returns node's state
+     * @return Node's state
+     */
     public static String debug() {
 
-        Utils.clearScreen();
-
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder()
+                .append("\n");
 
         if (chunks.size() > 0) {
             sb.append("- Stored chunks:\n");
@@ -233,8 +258,7 @@ public abstract class Store {
                             .append(chunkInfo.getKey())
                             .append(" ")
                             .append(chunkInfo.getValue().size).append(" B")
-                            .append(" (").append(Arrays.toString(chunkInfo.getValue().replicas.toArray())).append(")")
-                            .append("\n");
+                            .append(" ").append(Arrays.toString(chunkInfo.getValue().replicas.toArray())).append("\n");
                 }
 
                 sb.append("\n");

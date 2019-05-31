@@ -40,6 +40,10 @@ public abstract class Delete {
 		return true;
 	}
 
+	/**
+	 * Delete file
+	 * @param filePath File path
+	 */
 	public static void deleteFile(String filePath) {
 
 		String fileID = Utils.generateFileID(filePath);
@@ -51,10 +55,6 @@ public abstract class Delete {
             Logger.warning("Delete", "found another delete protocol instance for file " + fileID);
             return;
         }
-
-//		for (int chunkNo = 0; chunkNo < Store.files.get(fileID).chunks; chunkNo++) {
-//			ChordNode.instance().remove(fileID, chunkNo);
-//		}
 
 		boolean stop = false;
 		int chunkNo = 0;
@@ -68,9 +68,6 @@ public abstract class Delete {
 			chunkNo++;
 
 		} while (!stop);
-
-		// TODO if a dead node comes back with store, send check messages
-		// TODO add enhancement (sync store)
 
 		instances.computeIfPresent(fileID, (k,v) -> null);
 

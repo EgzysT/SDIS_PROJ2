@@ -9,18 +9,29 @@ import java.net.InetSocketAddress;
 
 import static common.protocol.ProtocolMessage.Type.*;
 
+/**
+ * Protocol's connection
+ */
 public class ProtocolConnection extends Connection {
 
+    /**
+     * Creates a new protocol's connection
+     * @param socket Client's socket
+     */
     public ProtocolConnection(SSLSocket socket) {
         super(socket);
     }
 
+    /**
+     * Creates a new protocol's connection
+     * @param addr Server's address
+     */
     public ProtocolConnection(InetSocketAddress addr) {
         super(addr);
     }
 
     /**
-     * Requests backup of a chunk.
+     * Requests backup of a chunk
      * @param fileID File identifier
      * @param chunkNo Chunk number
      * @param chunk Chunk
@@ -46,7 +57,7 @@ public class ProtocolConnection extends Connection {
     }
 
     /**
-     * Requests restore of a chunk.
+     * Requests restore of a chunk
      * @param fileID File identifier
      * @param chunkNo Chunk number
      * @return Reply
@@ -70,7 +81,7 @@ public class ProtocolConnection extends Connection {
     }
 
     /**
-     * Requests deletion of a chunk.
+     * Requests deletion of a chunk
      * @param fileID File identifier
      * @param chunkNo Chunk number
      * @return Reply
@@ -93,6 +104,13 @@ public class ProtocolConnection extends Connection {
        return reply;
    }
 
+    /**
+     * Requests chunk confirmation
+     * @param fileID File identifier
+     * @param chunkNo Chunk number
+     * @param replicaNo Replica number
+     * @return Reply
+     */
    public ProtocolMessage hasChunk(String fileID, Integer chunkNo, Integer replicaNo) {
 
        if (client == null)
@@ -112,7 +130,7 @@ public class ProtocolConnection extends Connection {
    }
 
     /**
-     * Listen to requests.
+     * Listen to requests
      * @return Request received
      */
     public ProtocolMessage listen() {
@@ -132,7 +150,7 @@ public class ProtocolConnection extends Connection {
     }
 
     /**
-     * Sends a reply to request.
+     * Sends a reply to request
      */
     public void reply(Boolean success) {
 
@@ -152,7 +170,7 @@ public class ProtocolConnection extends Connection {
     }
 
     /**
-     * Sends a reply to a request.
+     * Sends a reply to a request
      * @param chunk Chunk
      */
     public void reply(byte[] chunk) {

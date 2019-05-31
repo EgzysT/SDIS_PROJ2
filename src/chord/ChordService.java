@@ -16,6 +16,11 @@ public interface ChordService {
     void join(InetSocketAddress nodeAddr, InetSocketAddress superAddr);
 
     /**
+     * Starts Chord's service
+     */
+    void startService();
+
+    /**
      * Returns node's identifier
      * @return Node's identifier
      */

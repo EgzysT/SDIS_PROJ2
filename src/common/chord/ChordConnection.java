@@ -11,7 +11,7 @@ import java.net.InetSocketAddress;
 import java.util.List;
 
 /**
- * ChordHandler's connection
+ * Chord's connection
  */
 public class ChordConnection extends Connection {
 
@@ -99,6 +99,10 @@ public class ChordConnection extends Connection {
         return successor;
     }
 
+    /**
+     * Requests node's successors
+     * @return Node's successors
+     */
     public List<ChordInfo> getSuccessors() {
 
         if (client == null)
@@ -111,7 +115,7 @@ public class ChordConnection extends Connection {
             successors = ((ChordMessage) receive()).nodes;
             client.close();
         } catch (IOException e) {
-            Logger.warning("Chord", "failed to ask for successor");
+            Logger.warning("Chord", "failed to ask for successors");
         }
 
         return successors;
@@ -193,6 +197,9 @@ public class ChordConnection extends Connection {
         return message;
     }
 
+    /**
+     * Sends a reply to request
+     */
     void reply() {
 
         if (client == null)
@@ -222,6 +229,10 @@ public class ChordConnection extends Connection {
         }
     }
 
+    /**
+     * Sends a reply to request
+     * @param nodes Nodes
+     */
     void reply(List<ChordInfo> nodes) {
 
         if (client == null)

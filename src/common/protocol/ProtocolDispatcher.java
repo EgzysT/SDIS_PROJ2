@@ -23,7 +23,7 @@ public class ProtocolDispatcher extends Dispatcher {
 
         ChordNode.instance().info.setProtocolPort(server.getLocalPort());
 
-        Logger.info("Dispatcher", "started protocol dispatcher at " + server.getLocalPort());
+        Logger.info("Protocol", "started protocol dispatcher at " + server.getLocalPort());
     }
 
     @Override

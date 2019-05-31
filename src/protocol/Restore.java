@@ -30,7 +30,7 @@ public abstract class Restore {
     }
 
     /**
-     * Checks requirements before restore
+     * Checks requirements
      * @param fileID File identifier
      * @return True if all requirements are met, false otherwise
      */

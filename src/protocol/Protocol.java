@@ -112,7 +112,6 @@ public abstract class Protocol {
                         System.exit(-1);
                     }
 
-
                     attachment.flip();
 
                     connection.reply(Arrays.copyOfRange(attachment.array(), 0, attachment.remaining()));

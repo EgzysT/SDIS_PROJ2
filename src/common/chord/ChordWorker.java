@@ -1,12 +1,11 @@
 package common.chord;
 
-import chord.ChordHandler;
 import chord.ChordNode;
 import common.Worker;
 import utils.Logger;
 
 /**
- * ChordHandler's worker
+ * Chord's worker
  */
 class ChordWorker extends Worker {
 
@@ -14,7 +13,7 @@ class ChordWorker extends Worker {
     private ChordConnection connection;
 
     /**
-     * Creates a new chord's worker
+     * Creates a new Chord's worker
      * @param connection Connection
      */
     ChordWorker(ChordConnection connection) {

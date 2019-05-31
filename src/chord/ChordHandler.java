@@ -54,8 +54,8 @@ public abstract class ChordHandler {
     }
 
     /**
-     * Returns chord key from hash
-     * @param hash Hash to use
+     * Computes Chord key from hash
+     * @param hash Hash associated with key
      * @return Chord key associated with hash
      */
     public static BigInteger hashToKey(String hash) {

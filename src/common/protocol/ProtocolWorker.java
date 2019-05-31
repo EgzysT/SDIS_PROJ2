@@ -2,14 +2,21 @@ package common.protocol;
 
 import common.Worker;
 import protocol.Protocol;
-import protocol.ProtocolHandler;
 import store.Store;
 import utils.Logger;
 
+/**
+ * Protocol worker
+ */
 public class ProtocolWorker extends Worker {
 
+    /** Connection */
     private ProtocolConnection connection;
 
+    /**
+     * Creates a new Chord's worker
+     * @param connection Connection
+     */
     ProtocolWorker(ProtocolConnection connection) {
         this.connection = connection;
     }
